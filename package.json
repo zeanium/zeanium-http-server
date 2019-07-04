@@ -7,6 +7,10 @@
     "type": "git",
     "url": "https://github.com/zeanium/zeanium-http-server.git"
   },
+  "scripts": {
+    "publish": "npm publish --access public",
+    "unpublish": "npm unpublish --access public  --force"
+  },
   "keywords": [
     "http",
     "server",
