@@ -1,4 +1,5 @@
 module.exports = {
+    error: require('./error/_index.js'),
     config: require('./config/_index.js'),
     static: require('./static/_index.js'),
     middleware: require('./middleware/_index.js'),

@@ -16,7 +16,7 @@ module.exports = zn.Class({
             clientRequest.currentTimestamp = (new Date()).getTime();
 
             if(this._config.timeout){
-                serverResponse.setTimeout(this._config.timeout, this.__doTimeout);
+                serverResponse.setTimeout(this._config.timeout, ()=>this.__doTimeout(clientRequest, serverResponse));
             }
             serverResponse.on('finish', ()=>this.__doFinished(clientRequest, serverResponse));
                 
@@ -26,8 +26,8 @@ module.exports = zn.Class({
                 if(clientRequest.session.validate() === false) return;
             }*/
         },
-        __doTimeout: function (){
-            zn.info('timeout');
+        __doTimeout: function (clientRequest, serverResponse){
+            this.__doFinished(clientRequest, serverResponse);
         },
         __doFinished: function (clientRequest, serverResponse){
             serverResponse.currentTimestamp = (new Date()).getTime();
@@ -75,18 +75,26 @@ module.exports = zn.Class({
                 clientRequest.stats = node_fs.statSync(_path);
                 return this.doStatic(clientRequest, serverResponse);
             }
+            var _router = this.getRouter(clientRequest.meta.pathname);
+            if(_router){
+                clientRequest.router = _router;
+                return this.acceptDispatcherRequest(clientRequest, serverResponse);
+            }
             var _fragments = clientRequest.meta.pathname.split(node_path.sep);
             _fragments = _fragments.filter(fragment=>fragment.length);
             clientRequest.meta.fragments = _fragments;
             var _app = this._apps[_fragments[0]];
-            if(_app){
+            if(_app) {
                 _app.acceptRequest(clientRequest, serverResponse);
-            }else{
+            } else {
                 this.doError(serverResponse, 404, "Not Found.");
             }
         },
         doStatic: function (clientRequest, serverResponse){
             var _stats = clientRequest.stats;
+            if(!_stats){
+                _stats = node_fs.statSync(clientRequest.root);
+            }
             if(_stats.isDirectory()){
                 this.doStaticDirectory(clientRequest, serverResponse);
             }else if(_stats.isFile()){
@@ -129,6 +137,18 @@ module.exports = zn.Class({
         },
         doError: function (serverResponse, code, message){
             serverResponse.writeHead(code, message);
+            serverResponse.end();
+        },
+        doHttpError: function (serverResponse, code, message, details){
+            if(details){
+                serverResponse.write(details);
+            }
+            if(message){
+                serverResponse.statusMessage = message;
+            }
+            if(code){
+                serverResponse.statusCode = code;
+            }
             serverResponse.end();
         }
     }

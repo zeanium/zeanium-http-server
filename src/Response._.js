@@ -54,7 +54,7 @@ module.exports = zn.Class({
         },
         getResponseHTTPHeaders: function (config){
             var _headers = {};
-            if(this._request.application.serverContext.config.cors || this._request.application.config.cors){
+            if(this._request.serverContext.config.cors || (this._request.application && this._request.application.config.cors)){
                 zn.overwrite(_headers, this.getCORSHTTPHeadersSetting());
             }
             zn.overwrite(_headers, this.getBasicHTTPHeadersSetting(), config);

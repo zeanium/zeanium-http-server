@@ -1,10 +1,6 @@
 module.exports = zn.Controller('', {
     service: require('./ApplicationControllerService.js'),
     methods: {
-        init: function (serverContext, application){
-            this._serverContext = serverContext;
-            this._application = application;
-        },
         apis: {
             method: 'GET/POST',
             value: function (request, response){

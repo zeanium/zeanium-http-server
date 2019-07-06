@@ -1,20 +1,16 @@
 module.exports = zn.Controller('$', {
     service: require('./ServerControllerService.js'),
     methods: {
-        init: function (serverContext, application){
-            this._serverContext = serverContext;
-            this._application = application;
-        },
         redeploy: {
             method: 'GET/POST',
-            value: function (request, response, chain){
+            value: function (request, response){
                 this._serverContext.__delayDeploy();
                 response.success('redeploy success');
             }
         },
         apps: {
             method: 'GET/POST',
-            value: function (request, response, chain){
+            value: function (request, response){
                 response.success(Object.keys(this._serverContext._apps));
             }
         },

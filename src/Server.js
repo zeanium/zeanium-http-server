@@ -25,6 +25,7 @@ module.exports = zn.Class({
             var _config = zn.overwrite(args, CONFIG);
             this._config = _config;
             this.__initNodePaths(_config);
+            this.__loadMiddlewares(_config.middlewares);
             if(_config.auto){
                 this.start();
             }
@@ -71,6 +72,22 @@ module.exports = zn.Class({
                 module.constructor._initPaths();
                 zn.NODE_PATHS = process.env.NODE_PATH.split(node_path.delimiter);
             }
+        },
+        __loadMiddlewares: function (middlewares){
+            if(!middlewares) return;
+            var _middlewares = null,
+                _middleware = null;
+            if(typeof middlewares == 'string'){
+                middlewares = [ middlewares ];
+            }
+            middlewares.forEach(function (middleware){
+                _middlewares = require(node_path.resolve(middleware));
+                for(var key in _middlewares){
+                    zn.middleware.use(_middlewares[key]);
+                }
+            });
+
+            return this;
         },
         __createServerContext: function (config){
             this._context = new ServerContext(config, this);

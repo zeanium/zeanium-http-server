@@ -76,7 +76,7 @@ zn.middleware = zn.Class({
                     }
                 }
             }
-            
+
             return this;
         }
     }

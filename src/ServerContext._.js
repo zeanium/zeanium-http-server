@@ -5,9 +5,10 @@ var node_path = require('path');
 var ServerContextDeployer = require('./ServerContext.Deployer.js');
 var ServerContextWatcher = require('./ServerContext.Watcher.js');
 var ServerContextRequestDispatcher = require('./ServerContext.RequestDispatcher.js');
+var ServerContextRequestRouter = require('./ServerContext.RequestRouter.js');
 
 module.exports = zn.Class({
-    mixins: [ ServerContextDeployer, ServerContextWatcher, ServerContextRequestDispatcher ],
+    mixins: [ ServerContextDeployer, ServerContextWatcher, ServerContextRequestDispatcher, ServerContextRequestRouter ],
     properties: {
         config: null,
         server: null,
@@ -60,13 +61,12 @@ module.exports = zn.Class({
             var _key = Controller.getMeta('controller') || Controller.name;
             var _validate = (Controller.getMeta('validate') !== undefined) ? Controller.getMeta('validate') : false;
             var _controller = new Controller(this, application);
-
             Controller._methods_.forEach(function (method){
                 if(method!="init"){
                     _member = Controller.member(method);
                     if(_member.meta.router !== null){
                         _router = _member.meta.router || _member.name;
-                        _router = node_path.join(zn.SLASH, _deploy, _key, _router);
+                        _router = node_path.join(node_path.sep, _deploy, _key, _router);
                         _routers[_router] = {
                             action: method,
                             application: application,

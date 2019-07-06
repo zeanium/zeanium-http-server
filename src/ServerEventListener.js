@@ -46,7 +46,8 @@ module.exports = zn.Class({
                     this._server._context.accept(clientRequest, serverResponse);
                 }
             } catch (err){
-                zn.error(err);
+                zn.error(err.stack);
+                this._server._context.doHttpError(serverResponse, err.code, err.message, err.details);
             }
         },
         __onUpgrade: function (){
