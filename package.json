@@ -1,6 +1,6 @@
 {
   "name": "@zeanium/http-server",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "zeanium http server module",
   "main": "index.js",
   "repository": {
@@ -22,8 +22,7 @@
   "email": "xuyy0618@qq.com",
   "license": "MIT",
   "dependencies": {
-    "@zeanium/core": "^1.0.1",
-    "@zeanium/util": "^1.0.0",
+    "@zeanium/core": "^1.0.2",
     "chokidar": "^3.0.1",
     "formidable": "^1.2.1"
   }
