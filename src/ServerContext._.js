@@ -3,12 +3,11 @@
  */
 var node_path = require('path');
 var ServerContextDeployer = require('./ServerContext.Deployer.js');
-var ServerContextWatcher = require('./ServerContext.Watcher.js');
 var ServerContextRequestDispatcher = require('./ServerContext.RequestDispatcher.js');
 var ServerContextRequestRouter = require('./ServerContext.RequestRouter.js');
 
 module.exports = zn.Class({
-    mixins: [ ServerContextDeployer, ServerContextWatcher, ServerContextRequestDispatcher, ServerContextRequestRouter ],
+    mixins: [ ServerContextDeployer, ServerContextRequestDispatcher, ServerContextRequestRouter ],
     properties: {
         config: null,
         server: null,
@@ -20,6 +19,7 @@ module.exports = zn.Class({
     },
     methods: {
         init: function (config, server){
+            this.super(config, server);
             this._config = config;
             this.sets({
                 server: server,

@@ -8,8 +8,10 @@ var node_https = require('https');
 var node_path = require('path');
 var ServerContext = require('./ServerContext._.js');
 var ServerEventListener = require('./ServerEventListener.js');
+var ServerWatcher = require('./Server.Watcher');
 var CONFIG = require('./config/zn.server.config.js');
 module.exports = zn.Class({
+    mixins: [ ServerWatcher ],
     statics: {
         createServer: function (inArgs) {
             return new this(inArgs);
@@ -29,6 +31,18 @@ module.exports = zn.Class({
             if(_config.auto){
                 this.start();
             }
+            this.watching();
+        },
+        watching: function (){
+            this.__initWatcher();
+            this.__watchingFileChangedByPath(function (){
+                var _config = this._config;
+                this._context = null;
+                this.__initWatcher();
+                this.__initNodePaths(_config);
+                this.__loadMiddlewares(_config.middlewares);
+                this.__createServerContext(_config);
+            }.bind(this));
         },
         addListener: function(event, handler){
             return this._server.on(event, handler), this;
