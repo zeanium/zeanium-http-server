@@ -10,6 +10,7 @@ var ServerContext = require('./ServerContext._.js');
 var ServerEventListener = require('./ServerEventListener.js');
 var ServerWatcher = require('./Server.Watcher');
 var CONFIG = require('./config/zn.server.config.js');
+var Middleware = require('./Middleware');
 module.exports = zn.Class({
     mixins: [ ServerWatcher ],
     statics: {
@@ -26,6 +27,7 @@ module.exports = zn.Class({
         init: function (args){
             var _config = zn.overwrite(args, CONFIG);
             this._config = _config;
+            this.__init(_config);
             this.__initNodePaths(_config);
             this.__loadMiddlewares(_config.middlewares);
             if(_config.auto){
@@ -33,14 +35,17 @@ module.exports = zn.Class({
             }
             this.watching();
         },
-        watching: function (){
+        __init: function (_config){
+            this._beginTimestamp = (new Date()).getTime();
             this.__initWatcher();
+            this.__initNodePaths(_config);
+            this.__loadMiddlewares(_config.middlewares);
+        },
+        watching: function (){
             this.__watchingFileChangedByPath(function (){
                 var _config = this._config;
                 this._context = null;
-                this.__initWatcher();
-                this.__initNodePaths(_config);
-                this.__loadMiddlewares(_config.middlewares);
+                this.__init(_config);
                 this.__createServerContext(_config);
             }.bind(this));
         },
@@ -52,6 +57,9 @@ module.exports = zn.Class({
         },
         use: function (middleware){
             return zn.middleware.use(middleware), this;
+        },
+        uses: function (middlewares){
+            return this.__loadMiddlewares(middlewares), this;
         },
         middleware: function (middleware){
             return zn.middleware.use(middleware), this;
@@ -94,10 +102,21 @@ module.exports = zn.Class({
             if(typeof middlewares == 'string'){
                 middlewares = [ middlewares ];
             }
-            middlewares.forEach(function (middleware){
-                _middlewares = require(node_path.resolve(middleware));
-                for(var key in _middlewares){
-                    zn.middleware.use(_middlewares[key]);
+            zn.each(middlewares, function (middleware){
+                _middlewares = middleware;
+                
+                if(typeof _middlewares == 'string'){
+                    _middlewares = require(node_path.resolve(_middlewares));
+                }
+
+                if(typeof _middlewares == 'function' && _middlewares.getMeta('TYPE') && zn.middleware.TYPES[_middlewares.getMeta('TYPE')]){
+                    zn.middleware.use(_middlewares);
+                } else if(_middlewares instanceof Middleware){
+                    zn.middleware.use(_middlewares);
+                } else if(zn.is(_middlewares, 'object')){
+                    for(var key in _middlewares){
+                        zn.middleware.use(_middlewares[key]);
+                    }
                 }
             });
 

@@ -42,13 +42,16 @@ zn.middleware = zn.Class({
             this.data = {};
         },
         use: function (middleware, owner){
-            var _typeof = typeof middleware,
-                _type = null;
-            if(_typeof == 'function') {
-                _type = middleware.getMeta('TYPE');
+            var _type = null;
+
+            if(typeof middleware == 'function') {
                 middleware = new middleware(this);
-            }else if(_typeof == 'object'){
+            }
+
+            if(typeof middleware == 'object' && middleware instanceof Middleware){
                 _type = middleware.constructor.getMeta('TYPE');
+            }else{
+                return this;
             }
             
             if(!this.data[_type]){
