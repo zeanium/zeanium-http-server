@@ -5,20 +5,31 @@ var node_path = require('path');
 var ResponseWriter = require('./Response.Writer.js');
 var PACKAGE = require("../package.json");
 var VARS = require("./static/VARS");
+var Cookie = require('./session/Cookie');
+
 
 module.exports = zn.Class({
     mixins: [ ResponseWriter ],
     properties: {
+        cookies: null,
         request: null,
         serverResponse: null
     },
     methods: {
         init: function (serverResponse, request){
+            this._cookies = [];
             this._serverResponse = serverResponse;
             this._request = request;
             serverResponse.on('finish', function (){
                 request.clearFiles();
             });
+        },
+        addCookie: function (cookie){
+            if(cookie instanceof Cookie){
+                this._cookies.push(cookie);
+            }
+            
+            return this;
         },
         addServerResponseEventListener: function (event, listener, handler){
             return this._serverResponse.on.call(handler || this, event, listener), this;
