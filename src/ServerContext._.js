@@ -5,6 +5,7 @@ var node_path = require('path');
 var ServerContextDeployer = require('./ServerContext.Deployer.js');
 var ServerContextRequestDispatcher = require('./ServerContext.RequestDispatcher.js');
 var ServerContextRequestRouter = require('./ServerContext.RequestRouter.js');
+var MemorySessionContext = require('./session/MemorySessionContext');
 
 module.exports = zn.Class({
     mixins: [ ServerContextDeployer, ServerContextRequestDispatcher, ServerContextRequestRouter ],
@@ -15,7 +16,8 @@ module.exports = zn.Class({
         root: null,
         url: null,
         apps: null,
-        routers: null
+        routers: null,
+        sessionContext: null
     },
     methods: {
         init: function (config, server){
@@ -28,6 +30,7 @@ module.exports = zn.Class({
                 root: node_path.join(process.cwd(), config.catalog)
             });
             this.__initial();
+            this.__initSessionContext();
             this.__deploy();
             this.__loadingCompleted();
         },
@@ -41,6 +44,11 @@ module.exports = zn.Class({
         __initial: function (){
             this._apps = {};
             this._routers = {};
+        },
+        __initSessionContext: function (){
+            var _config = this._config.session,
+                _Context = _config.Context || MemorySessionContext;
+            this._sessionContext = new _Context(_config, this);
         },
         __loadingCompleted: function (){
             var _timestamp = (new Date()).getTime() - this._server._beginTimestamp;

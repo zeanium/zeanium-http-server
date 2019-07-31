@@ -1,23 +1,31 @@
+var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
 module.exports = zn.Class({
     properties: {
         name: null,
         value: null,
         domain: null,
         path: '/',
-        expires: null,
-        maxAge: null,
+        expires: 1800,
+        maxAge: 0,
         size: null,
-        HTTP: false,
-        httpOnly: false,
+        httpOnly: true,
         secure: false,
         sameSite: null,
-        comment: null
+        comment: null,
+        data: null
     },
     methods: {
         init: function (name, value, options){
             this._name = name;
             this._value = value;
             this.sets(options);
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.COOKIE, "initial", [name, value, options, this]);
+        },
+        setData: function (data){
+            return this._data = data, this;
+        },
+        getData: function (){
+            return this._data;
         },
         setName: function (name){
             return this._name = name, this;
@@ -67,12 +75,6 @@ module.exports = zn.Class({
         getHttpOnly: function (){
             return this._httpOnly;
         },
-        setHTTP: function (HTTP){
-            return this._HTTP = HTTP, this;
-        },
-        getHTTP: function (){
-            return this._HTTP;
-        },
         setSecure: function (secure){
             return this._secure = secure, this;
         },
@@ -91,19 +93,44 @@ module.exports = zn.Class({
         getComment: function (){
             return this._comment;
         },
+        __getSameSite: function (sameSite){
+            var _sameSite = typeof sameSite === 'string' ? sameSite.toLowerCase() : sameSite;
+            switch(_sameSite){
+                case true:
+                    return 'SameSite=Strict';
+                case 'lax':
+                    return 'SameSite=Lax';
+                case 'strict':
+                    return 'SameSite=Strict';
+                case 'none':
+                    return 'SameSite=None';
+                default:
+                    return '';
+            }
+        },
         serialize: function (){
-            var _pairs = [this._name + '=' + encodeURIComponent(this._value)];
-            
-            if (this._domain) _pairs.push('Domain=' + this._domain);
-            if (this._path) _pairs.push('Path=' + this._path);
-            if (this._expires) _pairs.push('Expires=' + (new Date(this._expires).toISOString()));
-            if (this._maxAge) _pairs.push('Max-Age=' + this._maxAge);
-            if (this._size) _pairs.push('Size=' + this._size);
-            if (this._HTTP) _pairs.push('HTTP');
-            if (this._httpOnly) _pairs.push('HttpOnly');
-            if (this._secure) _pairs.push('Secure');
-            if (this._sameSite) _pairs.push('SameSite=' + this._sameSite);
-            if (this._comment) _pairs.push('Comment=' + this._comment);
+            var _props = this.gets();
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.COOKIE, "serialize", [_props, this]);
+            var _pairs = [_props.name + '=' + encodeURIComponent(_props.value)];
+            if (_props.data) {
+                zn.each(_props.data, function (value, key){
+                    _pairs.push(key + "=" + value);
+                });
+            }
+            if(_props.expires) {
+                var _now = new Date();
+                _now.setTime(_now.getTime() + (Math.floor(_props.expires) * 1000));
+                _props.expires = _now;
+            }
+            if (_props.domain) _pairs.push('Domain=' + _props.domain);
+            if (_props.path) _pairs.push('Path=' + _props.path);
+            if (_props.expires) _pairs.push('Expires=' + _props.expires.toGMTString());
+            if (_props.maxAge) _pairs.push('Max-Age=' + Math.floor(_props.maxAge));
+            if (_props.size) _pairs.push('Size=' + _props.size);
+            if (_props.httpOnly) _pairs.push('HttpOnly');
+            if (_props.secure) _pairs.push('Secure');
+            if (_props.sameSite) _pairs.push(this.__getSameSite(_props.sameSite));
+            if (_props.comment) _pairs.push('Comment=' + _props.comment);
 
             return _pairs.join('; ');
         }

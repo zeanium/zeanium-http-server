@@ -139,17 +139,18 @@ module.exports = zn.Class({
             serverResponse.writeHead(code, message);
             serverResponse.end();
         },
-        doHttpError: function (serverResponse, code, message, details){
-            if(details){
-                serverResponse.write(details);
+        doHttpError: function (clientRequest, serverResponse, err){
+            if(err.details){
+                serverResponse.write(err.details);
             }
-            if(message){
-                serverResponse.statusMessage = message;
+            if(err.message){
+                serverResponse.statusMessage = err.message;
             }
-            if(code){
-                serverResponse.statusCode = code;
+            if(err.code){
+                serverResponse.statusCode = err.code;
             }
             serverResponse.end();
-        }
+        },
+
     }
 });

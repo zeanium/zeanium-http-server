@@ -5,8 +5,7 @@ var node_path = require('path');
 var ResponseWriter = require('./Response.Writer.js');
 var PACKAGE = require("../package.json");
 var VARS = require("./static/VARS");
-var Cookie = require('./session/Cookie');
-
+var Cookie = require('./Cookie');
 
 module.exports = zn.Class({
     mixins: [ ResponseWriter ],
@@ -24,12 +23,41 @@ module.exports = zn.Class({
                 request.clearFiles();
             });
         },
+        createSession: function (values, options){
+            var _session = this._request.getSession(values);
+            this.createCookie(this._request.getSessionConfig().name, _session.getId(), options);
+            return _session;
+        },
+        invalidateSession: function (){
+            var _session = this._request.getSession();
+            if(_session) {
+                _session.invalidate();
+                this._cookies.push(new Cookie(this._request.getSessionConfig().name, '----', {
+                    expires: -1
+                }));
+            }
+
+            return this;
+        },
+        createCookie: function (name, value, options){
+            var _config = this._request.getSessionConfig().cookie;
+            var _cookie = new Cookie(name, value, zn.overwrite(options, _config));
+            return this._cookies.push(_cookie), _cookie;
+        },
         addCookie: function (cookie){
             if(cookie instanceof Cookie){
                 this._cookies.push(cookie);
             }
             
             return this;
+        },
+        getCookies: function (){
+            return this._cookies;
+        },
+        getCookiesValue: function (){
+            return this._cookies.map(function (cookie){
+                return cookie.serialize();
+            });
         },
         addServerResponseEventListener: function (event, listener, handler){
             return this._serverResponse.on.call(handler || this, event, listener), this;
@@ -50,12 +78,19 @@ module.exports = zn.Class({
             }, this._request.application.serverContext.config.cors, this._request.application.config.cors, config);
         },
         getBasicHTTPHeadersSetting: function (setting){
-            var _headers = this._request._clientRequest.headers;
-            return zn.overwrite({
-                'X-Powered-By': PACKAGE.name,
-                'Server-Version': PACKAGE.version,
-                'Content-Type': (_headers["Content-Type"]||"application/json") + ';charset=' + (_headers["encoding"]||"utf-8")
-            }, setting);
+            var _headers = this._request._clientRequest.headers,
+                _cookies = this.getCookiesValue(),
+                _basic = {
+                    'X-Powered-By': PACKAGE.name,
+                    'Server': PACKAGE.name,
+                    'Server-Version': PACKAGE.version,
+                    'Content-Type': (_headers["Content-Type"]||"application/json") + ';charset=' + (_headers["encoding"]||"utf-8")
+                };
+            if(_cookies){
+                _basic['Set-Cookie'] = _cookies;
+            }
+            
+            return zn.overwrite(_basic, setting);
         },
         setContentType: function (contentType){
             this.setHeader("Content-Type", contentType);

@@ -6,7 +6,6 @@ var TIME = {
     w: 86400000 * 7
 }
 
-
 module.exports = {
     host: '0.0.0.0',
     port: 8888,
@@ -39,17 +38,19 @@ module.exports = {
     mode: 'release',     //release, debug, view,
     indexs: ['index.html', 'index.htm', 'default.html', 'default.htm'],
     session: {
+        context: null,
         name: 'ZNSESSIONID',
+        timeout: 60*30,
         rolling: false,    //每个请求都重新设置一个 cookie，默认为 false
-        secret: "www.youyang-info.com",     //通过设置的 secret 字符串，来计算 hash 值并放在 cookie 中，使产生的 signedCookie 防篡改
+        secret: "www.zeanium.com",     //通过设置的 secret 字符串，来计算 hash 值并放在 cookie 中，使产生的 signedCookie 防篡改
         cookie: {
             // cookie maxAge defaults to 14400000, path defaults to '/' and
             // httpOnly defaults to true.
-            maxAge: 1 * (TIME.h),
+            maxAge: 0,
             //domain: '/',
             path: '/',
-            expires: '',
-            httpOnly: false,
+            expires: 1800,
+            httpOnly: true,
             secure: false
         }
     }

@@ -34,10 +34,13 @@ zn.middleware = zn.Class({
                 APPLICATION: "APPLICATION",
                 CLIENT_REQUEST: "CLIENT_REQUEST",
                 CONTROLLER: "CONTROLLER",
+                COOKIE: "COOKIE",
                 HTTP_SERVER: "HTTP_SERVER",
                 SERVER: "SERVER",
                 SERVER_CONTEXT: "SERVER_CONTEXT",
-                SERVER_RESPONSE: "SERVER_RESPONSE"
+                SERVER_RESPONSE: "SERVER_RESPONSE",
+                SESSION: "SESSION",
+                SESSION_CONTEXT: "SESSION_CONTEXT"
             };
             this.data = {};
         },
@@ -80,7 +83,7 @@ zn.middleware = zn.Class({
                 }
             }
 
-            return this;
+            return _return;
         }
     }
 });

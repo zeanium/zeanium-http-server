@@ -36,7 +36,8 @@ module.exports = zn.Class({
         doRouter: function (router, request, response){
             try {
                 zn.extend(request._$get, router.pathArgv);
-                var _controller = router.controller,
+                var _validate = router.validate,
+                    _controller = router.controller,
                     _action = router.action,
                     _meta = _controller.member(_action).meta || {},
                     _values = this.__validateRouterMeta(_meta, request);
@@ -44,11 +45,30 @@ module.exports = zn.Class({
                 if(!_values){
                     return false;
                 }
-                if(!!router.validate){
-                    
+                if(_validate === undefined){
+                    _validate = _controller.constructor.getMate('validate');
                 }
-                
-                _controller[_action].call(_controller, request, response, this);
+                if(_validate === undefined) {
+                    return _controller[_action].call(_controller, request, response, this);
+                }
+
+                if(_validate === false){
+                    return _controller[_action].call(_controller, request, response, this);
+                }
+
+                if(_validate === true && request.hasSession()){
+                    return _controller[_action].call(_controller, request, response, this);
+                }
+
+                if(typeof _validate == 'function' && _validate.call(_controller, request, response) !== false){
+                    return _controller[_action].call(_controller, request, response, this);
+                }
+
+                throw new zn.ERROR.HttpRequestError({
+                    code: 401,
+                    message: "HTTP/1.1 401 Unauthorized.",
+                    details: "HTTP/1.1 401 Unauthorized, You Need Login Into System First."
+                });
             } catch (error) {
                 throw error;
             }
