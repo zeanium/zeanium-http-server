@@ -1,6 +1,18 @@
 /**
  * Created by yangyxu on 7/14/15.
  */
+var __deepCopy = function (source, target){
+    for(var key in source){
+        if(zn.is(source[key], 'plain')){
+            target[key] = __deepCopy(source[key], target[key]);
+        } else {
+            if(source[key] !== undefined){
+                target[key] = source[key];
+            }
+        }
+    }
+    return target
+}
 var node_crypto = require('crypto');
 module.exports = zn.Class({
     properties: {
@@ -34,6 +46,21 @@ module.exports = zn.Class({
             _data.context = null;
             delete _data.context;
             return _data;
+        },
+        setData: function (data){
+            for(var key in data){
+                if(this['_' + key] === undefined){
+                    this['_' + key] = data[key];
+                }else{
+                    if(zn.is(this['_' + key], 'plain') && zn.is(data[key], 'plain')){
+                        this['_' + key] = __deepCopy(data[key], this['_' + key]);
+                    } else {
+                        this['_' + key] = data[key];
+                    }
+                }
+            }
+
+            return this;
         },
         getId: function (){
             return this._id;

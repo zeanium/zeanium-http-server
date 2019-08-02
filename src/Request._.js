@@ -55,6 +55,9 @@ module.exports = zn.Class({
             });
         },
         hasSession: function (){
+            return !!this.getSession();
+        },
+        hasSessionCookie: function (){
             var _context = this._serverContext._sessionContext,
                 _config = _context.config;
             return !!this.getCookie(_config.name);
@@ -74,7 +77,7 @@ module.exports = zn.Class({
             if(_cookie){
                 _session = _context.getSession(_cookie.getValue());
                 if(_session){
-                    _session.setValues(values);
+                    _session.setData(values);
                     return _session;
                 }
             }

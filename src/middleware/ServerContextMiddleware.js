@@ -3,10 +3,13 @@ var ServerContextMiddleware = zn.Middleware({
         init: function (argv){
             this.super(argv);
         },
-        fileChanged: function (server){
+        fileChanged: function (){
             
         },
         requestAccept: function (serverRequest, serverResponse){
+            
+        },
+        doRouter: function (router, request, response){
             
         }
     }

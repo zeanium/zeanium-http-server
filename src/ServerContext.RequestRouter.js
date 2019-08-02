@@ -35,6 +35,9 @@ module.exports = zn.Class({
         },
         doRouter: function (router, request, response){
             try {
+                if(zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "doRouter", [router, request, response, this]) === false){
+                    return false;
+                };
                 zn.extend(request._$get, router.pathArgv);
                 var _validate = router.validate,
                     _controller = router.controller,
@@ -45,9 +48,11 @@ module.exports = zn.Class({
                 if(!_values){
                     return false;
                 }
+
                 if(_validate === undefined){
                     _validate = _controller.constructor.getMate('validate');
                 }
+
                 if(_validate === undefined) {
                     return _controller[_action].call(_controller, request, response, this);
                 }

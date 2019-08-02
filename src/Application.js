@@ -53,6 +53,9 @@ module.exports = zn.Class({
             if(config.models){
                 this._models = this.__loadPackages(config.models);
             }
+            if(config.middlewares){
+                this.__loadMiddlewares(config.middlewares);
+            }
             this._formidable = this.__initFileUploadConfig();
         },
         __initRouters: function (controllers){
@@ -90,6 +93,18 @@ module.exports = zn.Class({
             this.__initPath(_formidable.savedDir);
 
             return _formidable;
+        },
+        __loadMiddlewares: function (paths){
+            var _server = this._serverContext._server,
+                _root = this._config.root;
+            if(typeof paths == 'string'){
+                paths = [paths];
+            }
+            paths.forEach(function (path){
+                _server.__loadMiddlewares(require(node_path.join(_root, path)));
+            });
+            
+            return this;
         },
         __loadPackages: function (paths){
             var _exports = {};
