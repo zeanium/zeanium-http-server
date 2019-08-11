@@ -1,6 +1,6 @@
 var Controller = zn.Class({
     properties: {
-        serverContext: null,
+        context: null,
         application: null,
         service: null
     },
@@ -8,11 +8,11 @@ var Controller = zn.Class({
         init: {
             router: null,
             auto: true,
-            value: function (serverContext, application){
-                this._serverContext = serverContext;
+            value: function (context, application){
+                this._context = context;
                 this._application = application;
+                zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.CONTROLLER, "initial", [this, application, context]);
                 var Service = this.constructor.getMeta('service');
-                zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.CONTROLLER, "initial", [this, application, serverContext]);
                 if(Service){
                     this._service = new Service(this, application);
                 }
