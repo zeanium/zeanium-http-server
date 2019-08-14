@@ -25,10 +25,10 @@ module.exports = zn.Class({
     },
     methods: {
         init: function (args){
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER, "initial", [args, this]);
             var _config = zn.overwrite(args, CONFIG);
             this._config = _config;
             this.__init(_config);
-            this.__initNodePaths(_config);
             this.__loadMiddlewares(_config.middlewares);
             if(_config.auto){
                 this.start();
@@ -38,7 +38,6 @@ module.exports = zn.Class({
         __init: function (_config){
             this._beginTimestamp = (new Date()).getTime();
             this.__initWatcher();
-            this.__initNodePaths(_config);
             this.__loadMiddlewares(_config.middlewares);
         },
         watching: function (){
@@ -68,32 +67,10 @@ module.exports = zn.Class({
             var _config = zn.overwrite(config||{}, this._config);
             this.__createServerContext(_config);
             this.__createHTTPServer(_config);
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER, "started", [_config, this]);
         },
         close: function (){
             return this._server.close(), this;
-        },
-        __initNodePaths: function (config){
-            var paths = config.node_paths;
-            if(!paths || !paths.forEach){
-                return false;
-            }
-            /*Add current path to NODE_PATH*/
-            var _cwd = process.cwd(),
-                _path = null,
-                _parentPaths = [];
-            paths.forEach(function (path){
-                _path = node_path.normalize(_cwd + node_path.sep + path);
-                _parentPaths = _parentPaths.concat([_path]);
-                if(config.includeParentPath){
-                    _parentPaths = _parentPaths.concat(module.constructor._nodeModulePaths(_path));
-                }
-            });
-
-            if(_parentPaths.length){
-                process.env.NODE_PATH = _parentPaths.join(node_path.delimiter) + node_path.delimiter + process.env.NODE_PATH;
-                module.constructor._initPaths();
-                zn.NODE_PATHS = process.env.NODE_PATH.split(node_path.delimiter);
-            }
         },
         __loadMiddlewares: function (middlewares){
             if(!middlewares) return;

@@ -18,16 +18,18 @@ module.exports = zn.Class({
     },
     methods: {
         init: function (config, serverContext){
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "init", [this, config, serverContext]);
             zn.info("Loading Path: ", config.root);
             var _config = zn.overwrite(config, CONFIG);
             this._config = _config;
             this._serverContext = serverContext;
             this._controllers = {
-                '': ApplicationController
+                '__$__': ApplicationController
             }
-            this.__initial(_config);
+            this.__initial(_config, serverContext);
             serverContext.registerApplication(this);
             zn.info("Application[ ", config.deploy, " ] Loaded.");
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "loaded", [this, config, serverContext]);
         },
         acceptRequest: function (clientRequest, serverResponse){
             var _fragments = clientRequest.meta.fragments;
@@ -45,7 +47,7 @@ module.exports = zn.Class({
                 return this._serverContext.doError(serverResponse, 404, "Not Found."), this;
             }
         },
-        __initial: function (config){
+        __initial: function (config, serverContext){
             if(config.controllers){
                 zn.extend(this._controllers,  this.__loadPackages(config.controllers));
                 this._routers = this.__initRouters(this._controllers);
@@ -57,14 +59,18 @@ module.exports = zn.Class({
                 this.__loadMiddlewares(config.middlewares);
             }
             this._formidable = this.__initFileUploadConfig();
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initial", [this, config, serverContext]);
         },
         __initRouters: function (controllers){
             var _routers = {};
-
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initControllers", [this, controllers]);
+            
             zn.each(controllers, function (Controller, name){
                 Controller.name = name;
                 zn.extend(_routers, this._serverContext.__convertControllerToRouters(Controller, this));
             }.bind(this));
+            
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initRouters", [this, _routers]);
             return _routers;
         },
         __initPath: function (path){
@@ -103,7 +109,7 @@ module.exports = zn.Class({
             paths.forEach(function (path){
                 _server.__loadMiddlewares(require(node_path.join(_root, path)));
             });
-            
+
             return this;
         },
         __loadPackages: function (paths){

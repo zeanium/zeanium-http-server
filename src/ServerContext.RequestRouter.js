@@ -53,20 +53,22 @@ module.exports = zn.Class({
                     _validate = _controller.constructor.getMate('validate');
                 }
 
+                var _argv = [request, response, router.application, this, router];
+
                 if(_validate === undefined) {
-                    return _controller[_action].call(_controller, request, response, this);
+                    return _controller[_action].apply(_controller, _argv);
                 }
 
                 if(_validate === false){
-                    return _controller[_action].call(_controller, request, response, this);
+                    return _controller[_action].apply(_controller, _argv);
                 }
 
                 if(_validate === true && request.hasSession()){
-                    return _controller[_action].call(_controller, request, response, this);
+                    return _controller[_action].apply(_controller, _argv);
                 }
 
-                if(typeof _validate == 'function' && _validate.call(_controller, request, response) !== false){
-                    return _controller[_action].call(_controller, request, response, this);
+                if(typeof _validate == 'function' && _validate.call(_controller, request, response, router) !== false){
+                    return _controller[_action].apply(_controller, _argv);
                 }
 
                 throw new zn.ERROR.HttpRequestError({

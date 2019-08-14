@@ -1,10 +1,10 @@
-module.exports = zn.Controller('', {
+module.exports = zn.Controller('__$__', {
     service: require('./ApplicationControllerService.js'),
     methods: {
         apis: {
             method: 'GET/POST',
-            value: function (request, response){
-                var _routers = this._serverContext._routers,
+            value: function (request, response, application, context, router){
+                var _routers = application._routers,
                     _router = null,
                     _data = [],
                     _meta = {};
@@ -19,14 +19,25 @@ module.exports = zn.Controller('', {
         },
         routers: {
             method: 'GET/POST',
-            value: function (request, response){
-                response.success(Object.keys(request._context._routers));
+            value: function (request, response, application, context, router){
+                response.success(Object.keys(application._routers));
             }
         },
         plugins: {
             method: 'GET/POST',
-            value: function (request, response){
-                response.success(Object.keys(this._context._appContexts));
+            value: function (request, response, application, context, router){
+                response.success(Object.keys(context.apps));
+            }
+        },
+        uploadFiles: {
+            method: 'POST',
+            value: function (request, response, application, context, router){
+                var _files = request.$files, _result = [];
+                zn.each(_files, function (file, key){
+                    _result.push(request.uploadFile(file));
+                });
+
+                response.success(_result);
             }
         }
     }

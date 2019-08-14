@@ -3,11 +3,17 @@ var ApplicationMiddleware = zn.Middleware({
         init: function (argv){
             this.super(argv);
         },
-        initial: function (server){
+        initial: function (application, config, context){
             
         },
-        loaded: function (server){
+        loaded: function (application, config, context){
             
+        },
+        initControllers: function (application, controllers){
+
+        },
+        initRouters: function (application, routers){
+
         }
     }
 });

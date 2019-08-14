@@ -3,10 +3,10 @@ var ServerMiddleware = zn.Middleware({
         init: function (argv){
             this.super(argv);
         },
-        initial: function (server){
+        initial: function (config, server){
             
         },
-        loaded: function (server){
+        started: function (config, server){
             
         }
     }
