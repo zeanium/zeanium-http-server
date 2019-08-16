@@ -14,6 +14,7 @@ module.exports = zn.Class({
         formidable: null,
         controllers: null,
         models: null,
+        modules: null,
         routers: null
     },
     methods: {
@@ -48,29 +49,28 @@ module.exports = zn.Class({
             }
         },
         __initial: function (config, serverContext){
-            if(config.controllers){
-                zn.extend(this._controllers,  this.__loadPackages(config.controllers));
-                this._routers = this.__initRouters(this._controllers);
-            }
-            if(config.models){
-                this._models = this.__loadPackages(config.models);
-            }
-            if(config.middlewares){
-                this.__loadMiddlewares(config.middlewares);
-            }
+            this.__loadMiddlewares(config.middlewares);
+            this._models = this.__loadPackages(config.models);
+            this._modules = this.__loadPackages(config.modules);
+            zn.extend(this._controllers,  this.__loadPackages(config.controllers));
+            this._routers = this.__initRouters(this._controllers);
             this._formidable = this.__initFileUploadConfig();
+
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initial", [this, config, serverContext]);
         },
         __initRouters: function (controllers){
             var _routers = {};
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initControllers", [this, controllers]);
             
-            zn.each(controllers, function (Controller, name){
-                Controller.name = name;
-                zn.extend(_routers, this._serverContext.__convertControllerToRouters(Controller, this));
-            }.bind(this));
+            if(controllers){
+                zn.each(controllers, function (Controller, name){
+                    Controller.name = name;
+                    zn.extend(_routers, this._serverContext.__convertControllerToRouters(Controller, this));
+                }.bind(this));
+            }
             
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initRouters", [this, _routers]);
+            
             return _routers;
         },
         __initPath: function (path){
@@ -101,19 +101,26 @@ module.exports = zn.Class({
             return _formidable;
         },
         __loadMiddlewares: function (paths){
-            var _server = this._serverContext._server,
-                _root = this._config.root;
-            if(typeof paths == 'string'){
-                paths = [paths];
+            if(paths){
+                var _server = this._serverContext._server,
+                    _root = this._config.root;
+
+                if(typeof paths == 'string'){
+                    paths = [paths];
+                }
+
+                paths.forEach(function (path){
+                    _server.__loadMiddlewares(require(node_path.join(_root, path)));
+                });
             }
-            paths.forEach(function (path){
-                _server.__loadMiddlewares(require(node_path.join(_root, path)));
-            });
 
             return this;
         },
         __loadPackages: function (paths){
             var _exports = {};
+            if(!paths){
+                return _exports;
+            }
             if(typeof paths == 'string'){
                 paths = [paths];
             }

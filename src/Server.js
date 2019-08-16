@@ -74,8 +74,7 @@ module.exports = zn.Class({
         },
         __loadMiddlewares: function (middlewares){
             if(!middlewares) return;
-            var _middlewares = null,
-                _middleware = null;
+            var _middlewares = null;
             if(typeof middlewares == 'string'){
                 middlewares = [ middlewares ];
             }

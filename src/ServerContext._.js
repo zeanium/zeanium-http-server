@@ -17,6 +17,7 @@ module.exports = zn.Class({
         url: null,
         apps: null,
         routers: null,
+        modules: null,
         sessionContext: null
     },
     methods: {
@@ -29,7 +30,7 @@ module.exports = zn.Class({
                 url: this.__parseURL(config.host, config.port),
                 root: node_path.join(process.cwd(), config.catalog)
             });
-            this.__initial();
+            this.__initial(config);
             this.__initSessionContext();
             this.__deploy();
             this.__loadingCompleted();
@@ -41,9 +42,10 @@ module.exports = zn.Class({
             this._apps[application.config.deploy] = application;
             return zn.extend(this._routers, application.routers), this;
         },
-        __initial: function (){
+        __initial: function (config){
             this._apps = {};
             this._routers = {};
+            this._modules = this.__loadPackages(config.modules);
         },
         __initSessionContext: function (){
             var _config = this._config.session,
@@ -95,6 +97,20 @@ module.exports = zn.Class({
             });
 
             return _routers;
+        },
+        __loadPackages: function (paths){
+            var _exports = {};
+            if(!paths){
+                return _exports;
+            }
+            if(typeof paths == 'string'){
+                paths = [paths];
+            }
+            paths.forEach(function (path){
+                zn.extend(_exports, require(node_path.join(this._config.root, path)));
+            }.bind(this));
+
+            return _exports;
         }
     }
 });
