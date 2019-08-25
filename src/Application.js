@@ -49,9 +49,11 @@ module.exports = zn.Class({
             }
         },
         __initial: function (config, serverContext){
+            this._modules = this.__require(config.modules, function (md, path){
+                zn.debug('Loading Module: ', md, path);
+            }.bind(this));
             this.__loadMiddlewares(config.middlewares);
             this._models = this.__loadPackages(config.models);
-            this._modules = this.__loadPackages(config.modules);
             zn.extend(this._controllers,  this.__loadPackages(config.controllers));
             this._routers = this.__initRouters(this._controllers);
             this._formidable = this.__initFileUploadConfig();
@@ -116,16 +118,40 @@ module.exports = zn.Class({
 
             return this;
         },
-        __loadPackages: function (paths){
-            var _exports = {};
+        __loadPackages: function (paths, callback){
+            var _exports = {},
+                _path = null;
+
             if(!paths){
                 return _exports;
             }
+
             if(typeof paths == 'string'){
                 paths = [paths];
             }
             paths.forEach(function (path){
-                zn.extend(_exports, require(node_path.join(this._config.root, path)));
+                _path = node_path.join(this._config.root, path);
+                callback && callback(path, _path);
+                zn.extend(_exports, require(_path));
+            }.bind(this));
+
+            return _exports;
+        },
+        __require: function (paths, callback){
+            var _exports = {},
+                _path = null;
+
+            if(!paths){
+                return _exports;
+            }
+
+            if(typeof paths == 'string'){
+                paths = [paths];
+            }
+            paths.forEach(function (path){
+                _path = node_path.resolve(path);
+                callback && callback(path, _path);
+                zn.extend(_exports, require(path));
             }.bind(this));
 
             return _exports;
