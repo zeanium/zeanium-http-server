@@ -104,7 +104,10 @@ module.exports = zn.Class({
         doStaticFile: function (clientRequest, serverResponse){
             var _root = clientRequest.root,
                 _extname = node_path.extname(_root).toLowerCase(),
-                _mime = MIMES[_extname];
+                _mime = MIMES[_extname] || {
+                    contentType: 'text/plain',
+                    encoding: 'binary'
+                };
             if(typeof _mime == 'string'){
                 _mime = {
                     contentType: _mime,

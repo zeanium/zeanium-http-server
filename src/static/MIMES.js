@@ -169,5 +169,10 @@ module.exports = {
     ".xslt"  : "application/xslt+xml",
     ".yaml"  : "text/yaml",
     ".yml"   : "text/yaml",
-    ".zip"   : "application/zip"
+    ".zip"   : "application/zip",
+    ".woff"  : "font/woff",
+    ".woff2"  : "font/woff2",
+    ".ttf"   : "font/ttf",
+    ".otf"  : "font/otf",
+    ".eot"   : "font/eot"
 };
