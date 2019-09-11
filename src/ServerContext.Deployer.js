@@ -35,30 +35,43 @@ module.exports = zn.Class({
                 }
             }.bind(this));
         },
-        __createApplication: function (path){
-            var _configPath = node_path.join(path, VARS.CONFIG.app);
-            if(!node_fs.existsSync(_configPath)){ return this.__loadDirectory(path); }
-            var _config = require(_configPath);
+        __createApplication: function (configPath){
+            var _fstat = node_fs.statSync(configPath);
+            if(_fstat.isDirectory()){
+                if(!node_fs.existsSync(node_path.join(configPath, VARS.CONFIG.app))){
+                    return this.__loadDirectory(configPath);
+                }
+                configPath = node_path.join(configPath, VARS.CONFIG.app);
+            }
+
+            if(!node_fs.existsSync(configPath)){  
+                return false;
+            }
+            var _config = require(configPath),
+                _path = configPath.replace(VARS.CONFIG.app, '');
+            
+            _config.root = _path;
             if(!_config.deploy){
                 var _deploy = null,
-                    _temps = path.split(node_path.sep).reverse();
+                    _temps = _path.split(node_path.sep).reverse();
                 _temps.map(function (item){
                     if(item && !_deploy){ _deploy = item; }
                 });
                 _config.deploy = _deploy;
             }
-            _config.root = path;
+
             return new Application(_config, this);
         },
         __loadAppsByConfig: function (){
-            var _config = this._config;
+            var _config = this._config,
+                _appConfigFileName = VARS.CONFIG.app;
 
             _config.node_modules && _config.node_modules.forEach(function (name, index){
-                this.__createApplication(require.resolve(name));
+                this.__createApplication(require.resolve(node_path.join(name, _appConfigFileName)));
             }.bind(this));
             
             _config.paths && _config.paths.forEach(function (path){
-                this.__createApplication(node_path.resolve(this.root, path));
+                this.__createApplication(node_path.resolve(node_path.join(this.root, path, _appConfigFileName)));
             }.bind(this));
 
             return this.__createApplication(this.root), this;
