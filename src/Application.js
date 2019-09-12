@@ -53,7 +53,11 @@ module.exports = zn.Class({
                 zn.debug('Loading Module: ', md, path);
             }.bind(this));
             this.__loadMiddlewares(config.middlewares);
-            this._models = this.__loadPackages(config.models);
+            this._models = this.__loadPackages(config.models, function (key, model){
+                if(config.table_prefix){
+                    model.setMeta('table', config.table_prefix + model.getMeta('table'));
+                }
+            });
             zn.extend(this._controllers,  this.__loadPackages(config.controllers));
             this._routers = this.__initRouters(this._controllers);
             this._formidable = this.__initFileUploadConfig();
@@ -120,7 +124,8 @@ module.exports = zn.Class({
         },
         __loadPackages: function (paths, callback){
             var _exports = {},
-                _path = null;
+                _path = null,
+                _temps = {};
 
             if(!paths){
                 return _exports;
@@ -129,10 +134,14 @@ module.exports = zn.Class({
             if(typeof paths == 'string'){
                 paths = [paths];
             }
+
             paths.forEach(function (path){
                 _path = node_path.join(this._config.root, path);
-                callback && callback(path, _path);
-                zn.extend(_exports, require(_path));
+                _temps = require(_path);
+                for(var key in _temps){
+                    callback && callback(key, _temps[key], path, _path);
+                    _exports[key] = _temps[key];
+                }
             }.bind(this));
 
             return _exports;
