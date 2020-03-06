@@ -12,7 +12,7 @@ module.exports = zn.Class({
     properties: {
         config: null,
         server: null,
-        znpath: null,
+        path: null,
         root: null,
         url: null,
         apps: null,
@@ -26,7 +26,7 @@ module.exports = zn.Class({
             this._config = config;
             this.sets({
                 server: server,
-                znpath: __dirname,
+                path: __dirname,
                 url: this.__parseURL(config.host, config.port),
                 root: node_path.resolve(process.cwd(), config.catalog)
             });

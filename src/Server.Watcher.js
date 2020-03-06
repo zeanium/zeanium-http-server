@@ -17,6 +17,9 @@ module.exports = zn.Class({
             if(this._isWatching) return false;
             this._isWatching = true;
             var _watcher = this._config.watcher;
+            if(!_watcher.watching) {
+                return false;
+            }
             _watcher.cwd = this.initWatchCwd();
             zn.info('Watching Path: ', _watcher.cwd);
             chokidar.watch('.', _watcher)
@@ -36,7 +39,7 @@ module.exports = zn.Class({
             }.bind(this));
         },
         __doFileChanged: function (callback, event, path, details){
-            var _delay = this._delay || this._config.delay || 3000;
+            var _delay = this._delay || this._config.watcher.deployDelayInterval || 3000;
             if(_delay > 0){
                 this._delay = _delay;
                 if(!this._interval){

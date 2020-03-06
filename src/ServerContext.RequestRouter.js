@@ -1,9 +1,6 @@
 /**
  * Created by yangyxu on 8/20/14.
  */
-var node_fs = require('fs');
-var node_path = require('path');
-
 var Request = require('./Request._.js');
 var Response = require('./Response._.js');
 

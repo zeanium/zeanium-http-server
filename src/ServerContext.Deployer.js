@@ -5,13 +5,14 @@ var node_fs = require('fs');
 var node_path = require('path');
 var Application = require('./Application.js');
 var ServerController = require('./controller/ServerController.js');
-
 var VARS = require('./static/VARS.js');
 
 module.exports = zn.Class({
     methods: {
         __deploy: function (){
-            this.__loadDefault();
+            if(this._config.loadDefault) {
+                this.__loadDefault();
+            }
             this.__loadAppsByConfig();
         },
         __loadDefault: function (){

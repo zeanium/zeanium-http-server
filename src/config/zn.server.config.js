@@ -7,13 +7,18 @@ var TIME = {
 }
 
 module.exports = {
+    loadDefault: true,
+    mode: 'development',     //development, stage, production
+    https: false,
     host: '0.0.0.0',
     port: 8888,
     catalog: '/',
     watcher: {
-        cwd: '/src/',
+        watching: true,
+        cwd: '/',
         ignored: /[\/\\]\./,
-        interval: 100,
+        interval: 1000,
+        deployDelayInterval: 3000,
         binaryInterval: 300,
         depth: 99,
         persistent: true
@@ -28,14 +33,8 @@ module.exports = {
         maxFields: 1000,
         multiples: true
     },
-    views: {
-        path: '/src/view/',
-        suffix: 'html'
-    },
     timeout: 12000,
-    reDeployDelay: 3000,
-    CORS: true,
-    mode: 'release',     //release, debug, view,
+    cors: true,
     indexs: ['index.html', 'index.htm', 'default.html', 'default.htm'],
     session: {
         context: null,

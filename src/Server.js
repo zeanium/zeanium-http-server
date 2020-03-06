@@ -26,7 +26,7 @@ module.exports = zn.Class({
     methods: {
         init: function (args){
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER, "initial", [args, this]);
-            var _config = zn.overwrite(args, CONFIG);
+            var _config = zn.deepAssigns({}, CONFIG, args);
             this._config = _config;
             this.__init(_config);
             this.__loadMiddlewares(_config.middlewares);
@@ -41,6 +41,7 @@ module.exports = zn.Class({
             this.__loadMiddlewares(_config.middlewares);
         },
         watching: function (){
+            if(this._config.mode != 'development') return;
             this.__watchingFileChangedByPath(function (){
                 var _config = this._config;
                 this._context = null;

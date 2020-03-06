@@ -21,7 +21,7 @@ module.exports = zn.Class({
         init: function (config, serverContext){
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "init", [this, config, serverContext]);
             zn.info("Loading Path: ", config.root);
-            var _config = zn.overwrite(config, CONFIG);
+            var _config = zn.deepAssigns({}, CONFIG, config);
             this._config = _config;
             this._serverContext = serverContext;
             this._controllers = {
