@@ -136,7 +136,7 @@ module.exports = zn.Class({
             }
 
             paths.forEach(function (path){
-                _path = node_path.join(this._config.root, path);
+                _path = node_path.resolve(this._config.root, path);
                 _temps = require(_path);
                 for(var key in _temps){
                     callback && callback(key, _temps[key], path, _path);

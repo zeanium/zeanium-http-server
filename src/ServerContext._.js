@@ -28,7 +28,7 @@ module.exports = zn.Class({
                 server: server,
                 znpath: __dirname,
                 url: this.__parseURL(config.host, config.port),
-                root: node_path.join(process.cwd(), config.catalog)
+                root: node_path.resolve(process.cwd(), config.catalog)
             });
             this.__initial(config);
             this.__initSessionContext();

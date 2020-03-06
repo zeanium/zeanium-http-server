@@ -30,41 +30,52 @@ module.exports = zn.Class({
                 withFileTypes: true
             });
             _files.forEach(function (file){
-                if(file.isDirectory() && node_fs.existsSync(node_path.join(directory, file.name, VARS.CONFIG.app))){
+                if(file.isDirectory() && node_fs.existsSync(node_path.join(directory, file.name, this._config.app_config || VARS.CONFIG.app))){
                     this.__createApplication(node_path.join(directory, file.name));
                 }
             }.bind(this));
         },
         __createApplication: function (configPath){
-            var _fstat = node_fs.statSync(configPath);
+            var _fstat = node_fs.statSync(configPath),
+                _configFileName = this._config.app_config || VARS.CONFIG.app;
             if(_fstat.isDirectory()){
-                if(!node_fs.existsSync(node_path.join(configPath, VARS.CONFIG.app))){
+                if(!node_fs.existsSync(node_path.resolve(configPath, _configFileName))){
                     return this.__loadDirectory(configPath);
                 }
-                configPath = node_path.join(configPath, VARS.CONFIG.app);
+                configPath = node_path.resolve(configPath, _configFileName);
             }
 
             if(!node_fs.existsSync(configPath)){  
                 return false;
             }
             var _config = require(configPath),
-                _path = configPath.replace(VARS.CONFIG.app, '');
+                _path = configPath.replace(_configFileName, '');
             
-            _config.root = _path;
-            if(!_config.deploy){
-                var _deploy = null,
-                    _temps = _path.split(node_path.sep).reverse();
-                _temps.map(function (item){
-                    if(item && !_deploy){ _deploy = item; }
-                });
-                _config.deploy = _deploy;
+            return this.createApplicaton(_config, _path);
+        },
+        createApplicaton: function (_config, _path){
+            if(_config && _path){
+                if(!_config.root) {
+                    _config.root = _path
+                }
+                if(!_config.deploy){
+                    var _temps = _path.split(node_path.sep).reverse(),
+                        _i = 0,
+                        _deploy = _temps[_i];
+                    while(!_deploy) {
+                        _i = _i + 1;
+                        _deploy = _temps[_i];
+                    }
+
+                    _config.deploy = _deploy;
+                }
             }
 
             return new Application(_config, this);
         },
         __loadAppsByConfig: function (){
             var _config = this._config,
-                _appConfigFileName = VARS.CONFIG.app;
+                _appConfigFileName = _config.app_config || VARS.CONFIG.app;
 
             _config.node_modules && _config.node_modules.forEach(function (name, index){
                 this.__createApplication(require.resolve(node_path.join(name, _appConfigFileName)));
@@ -74,6 +85,15 @@ module.exports = zn.Class({
                 this.__createApplication(node_path.resolve(node_path.join(this.root, path, _appConfigFileName)));
             }.bind(this));
 
+            
+            if(_config.app){
+                this.createApplicaton(app, this.root);
+            } 
+            
+            if(_config.apps && zn.is(_config.apps, 'array')){
+                _config.apps.forEach((app)=> this.createApplicaton(app, this.root));
+            }
+            
             return this.__createApplication(this.root), this;
         }
     }
