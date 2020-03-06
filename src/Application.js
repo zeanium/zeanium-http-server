@@ -98,8 +98,8 @@ module.exports = zn.Class({
             var _formidable = zn.overwrite({}, this.serverContext.config.formidable, this.config.formidable, config);
             var _root = _formidable.root || this.serverContext.root;
             if(_root){
-                _formidable.uploadDir = node_path.resolve(_root, _formidable.uploadDir);
-                _formidable.savedDir = node_path.resolve(_root, _formidable.savedDir);
+                _formidable.uploadDir = node_path.join(_root, _formidable.uploadDir);
+                _formidable.savedDir = node_path.join(_root, _formidable.savedDir);
             }
             this.__initPath(_formidable.uploadDir);
             this.__initPath(_formidable.savedDir);
@@ -116,7 +116,9 @@ module.exports = zn.Class({
                 }
 
                 paths.forEach(function (path){
-                    _server.__loadMiddlewares(require(node_path.join(_root, path)));
+                    if(node_fs.existsSync(node_path.join(_root, path))) {
+                        _server.__loadMiddlewares(require(node_path.join(_root, path)));
+                    }
                 });
             }
 
@@ -136,7 +138,10 @@ module.exports = zn.Class({
             }
 
             paths.forEach(function (path){
-                _path = node_path.resolve(this._config.root, path);
+                _path = node_path.join(this._config.root, path);
+                if(!node_fs.existsSync(_path)) {
+                    return;
+                }
                 _temps = require(_path);
                 for(var key in _temps){
                     callback && callback(key, _temps[key], path, _path);
@@ -159,8 +164,10 @@ module.exports = zn.Class({
             }
             paths.forEach(function (path){
                 _path = node_path.resolve(path);
-                callback && callback(path, _path);
-                zn.extend(_exports, require(path));
+                if(node_fs.existsSync(_path)){
+                    callback && callback(path, _path);
+                    zn.extend(_exports, require(path));
+                }
             }.bind(this));
 
             return _exports;

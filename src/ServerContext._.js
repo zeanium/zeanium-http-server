@@ -2,6 +2,7 @@
  * Created by yangyxu on 8/20/14.
  */
 var node_path = require('path');
+var node_fs = require('fs');
 var ServerContextDeployer = require('./ServerContext.Deployer.js');
 var ServerContextRequestDispatcher = require('./ServerContext.RequestDispatcher.js');
 var ServerContextRequestRouter = require('./ServerContext.RequestRouter.js');
@@ -28,7 +29,7 @@ module.exports = zn.Class({
                 server: server,
                 path: __dirname,
                 url: this.__parseURL(config.host, config.port),
-                root: node_path.resolve(process.cwd(), config.catalog)
+                root: node_path.join(process.cwd(), config.catalog)
             });
             this.__initial(config);
             this.__initSessionContext();
@@ -107,7 +108,10 @@ module.exports = zn.Class({
                 paths = [paths];
             }
             paths.forEach(function (path){
-                zn.extend(_exports, require(node_path.join(this._config.root, path)));
+                path = node_path.join(this._config.root, path);
+                if(node_fs.existsSync(path)){
+                    zn.extend(_exports, require(path));
+                }
             }.bind(this));
 
             return _exports;

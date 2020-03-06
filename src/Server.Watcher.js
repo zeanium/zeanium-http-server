@@ -11,7 +11,7 @@ module.exports = zn.Class({
         },
         initWatchCwd: function (){
             var _config = this._config;
-            return node_path.resolve(process.cwd(), _config.catalog, _config.watcher.cwd);
+            return node_path.join(process.cwd(), _config.catalog, _config.watcher.cwd);
         },
         __watchingFileChangedByPath: function (callback){
             if(this._isWatching) return false;
@@ -21,6 +21,7 @@ module.exports = zn.Class({
                 return false;
             }
             _watcher.cwd = this.initWatchCwd();
+            
             zn.info('Watching Path: ', _watcher.cwd);
             chokidar.watch('.', _watcher)
             .on('raw', function(event, path, details) {

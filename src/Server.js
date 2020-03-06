@@ -3,6 +3,7 @@
  */
 var node_cluster = require('cluster');
 var node_os = require('os');
+var node_fs = require('fs');
 var node_http = require('http');
 var node_https = require('https');
 var node_path = require('path');
@@ -83,7 +84,9 @@ module.exports = zn.Class({
                 _middlewares = middleware;
                 
                 if(typeof _middlewares == 'string'){
-                    _middlewares = require(node_path.resolve(_middlewares));
+                    if(node_fs.existsSync(node_path.resolve(_middlewares))){
+                        _middlewares = require(node_path.resolve(_middlewares));
+                    }
                 }
 
                 if(typeof _middlewares == 'function' && _middlewares.getMeta('TYPE') && zn.middleware.TYPES[_middlewares.getMeta('TYPE')]){

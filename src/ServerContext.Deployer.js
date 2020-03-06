@@ -40,10 +40,10 @@ module.exports = zn.Class({
             var _fstat = node_fs.statSync(configPath),
                 _configFileName = this._config.app_config || VARS.CONFIG.app;
             if(_fstat.isDirectory()){
-                if(!node_fs.existsSync(node_path.resolve(configPath, _configFileName))){
+                if(!node_fs.existsSync(node_path.join(configPath, _configFileName))){
                     return this.__loadDirectory(configPath);
                 }
-                configPath = node_path.resolve(configPath, _configFileName);
+                configPath = node_path.join(configPath, _configFileName);
             }
 
             if(!node_fs.existsSync(configPath)){  
