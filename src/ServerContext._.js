@@ -54,12 +54,16 @@ module.exports = zn.Class({
             this._sessionContext = new _Context(_config, this);
         },
         __loadingCompleted: function (){
-            var _timestamp = (new Date()).getTime() - this._server._beginTimestamp;
+            var _timestamp = (new Date()).getTime() - this._server._beginTimestamp,
+                _urls = [];
             this._server.__forEachNetworkInterfaces(function (value, index){
                 if(value.family == 'IPv4'){
-                    zn.info(this.__parseURL(value.address));
+                    var _address = this.__parseURL(value.address);
+                    _urls.push(_address);
+                    zn.info(_address);
                 }
             }.bind(this));
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "loadCompleted", [_timestamp, _urls, this]);
             zn.info('[ ',_timestamp, 's ] Loading Completed.')
         },
         __parseURL: function (host){

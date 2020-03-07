@@ -11,6 +11,12 @@ var ServerContextMiddleware = zn.Middleware({
         },
         doRouter: function (router, request, response){
             
+        },
+        loaded: function (router, request, response){
+            
+        },
+        loadCompleted: function (timestamp, urls, contenxt){
+            
         }
     }
 });
