@@ -67,7 +67,17 @@ module.exports = zn.Class({
         },
         getCORSHTTPHeadersSetting: function (config){
             var _headers = this._request._clientRequest.headers,
-                _origin = _headers.origin || _headers.host || _headers.Host;
+                _origin = _headers.origin || _headers.host || _headers.Host,
+                _cors = config || {};
+            if(this._request.application) {
+                if(this._request.application.serverContext.config.cors) {
+                    _cors = zn.extend({}, this._request.application.serverContext.config.cors, _cors);
+                }
+                if(this._request.application.config.cors){
+                    _cors = zn.extend({}, this._request.application.config.cors, _cors);
+                }
+            }
+
 
             return zn.overwrite({
                 'Access-Control-Allow-Origin': _origin,
@@ -75,7 +85,7 @@ module.exports = zn.Class({
                 'Access-Control-Allow-Headers': 'Accept,Accept-Charset,Accept-Encoding,Accept-Language,Connection,Content-Type,Cookie,DNT,Host,Keep-Alive,Origin,Referer,User-Agent,X-CSRF-Token,X-Requested-With',
                 "Access-Control-Allow-Credentials": true,
                 'Access-Control-Max-Age': '3600'    //一个小时时间
-            }, this._request.application.serverContext.config.cors, this._request.application.config.cors, config);
+            }, _cors);
         },
         getBasicHTTPHeadersSetting: function (setting){
             var _headers = this._request._clientRequest.headers,

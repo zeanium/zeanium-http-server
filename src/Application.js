@@ -55,7 +55,7 @@ module.exports = zn.Class({
             this.__loadMiddlewares(config.middlewares);
             this._models = this.__loadPackages(config.models, function (key, model){
                 if(config.table_prefix){
-                    model.setMeta('table', config.table_prefix + model.getMeta('table'));
+                    model.setMeta('tablePrefix', config.table_prefix);
                 }
             });
             zn.extend(this._controllers,  this.__loadPackages(config.controllers));
