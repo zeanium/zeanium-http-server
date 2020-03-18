@@ -6,7 +6,6 @@ var node_fs = require('fs');
 var ApplicationController = require('./controller/ApplicationController');
 var CONFIG = require('./config/zn.app.config.js');
 
-
 module.exports = zn.Class({
     properties: {
         config: null,
@@ -49,9 +48,7 @@ module.exports = zn.Class({
             }
         },
         __initial: function (config, serverContext){
-            this._modules = this.__require(config.modules, function (md, path){
-                zn.debug('Loading Module: ', md, path);
-            }.bind(this));
+            this.__initModules(config.modules);
             this.__loadMiddlewares(config.middlewares);
             this._models = this.__loadPackages(config.models, function (key, model){
                 if(config.table_prefix){
@@ -63,6 +60,21 @@ module.exports = zn.Class({
             this._formidable = this.__initFileUploadConfig();
 
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initial", [this, config, serverContext]);
+        },
+        __initModules: function (modules){
+            if(zn.is(modules, 'array')) {
+                this._modules = this.__requires(modules, function (md, path){
+                    zn.debug('Loaded Module: ', { name: md, path: path });
+                }.bind(this));
+            } else if(zn.is(modules, 'object')){
+                this._modules = {};
+                for(var key in modules) {
+                    this._modules[key] = this.__require(modules[key], function (md, path){
+                        zn.debug('Loaded Module: ', { key: key, name: md, path: path });
+                    }.bind(this));
+                    zn.path(global, key, this._modules[key]);
+                }
+            }
         },
         __initRouters: function (controllers){
             var _routers = {};
@@ -151,9 +163,17 @@ module.exports = zn.Class({
 
             return _exports;
         },
-        __require: function (paths, callback){
+        __resolve: function (path){
+            var _paths = process.env.NODE_PATH.split(':');
+            for(var i = 0, _len = _paths.length; i < _len; i++){
+                if(node_fs.existsSync(node_path.join(_paths[i], path))){
+                    return node_path.join(_paths[i], path);
+                }
+            }
+        },
+        __requires: function (paths, callback){
             var _exports = {},
-                _path = null;
+                _temp = null;
 
             if(!paths){
                 return _exports;
@@ -162,15 +182,26 @@ module.exports = zn.Class({
             if(typeof paths == 'string'){
                 paths = [paths];
             }
+            
             paths.forEach(function (path){
-                _path = node_path.resolve(path);
-                if(node_fs.existsSync(_path)){
-                    callback && callback(path, _path);
-                    zn.extend(_exports, require(path));
+                _temp = this.__require(path, callback);
+                if(_temp) {
+                    _exports[_temp.__exports__ || path] = _temp; 
                 }
             }.bind(this));
 
             return _exports;
+        },
+        __require: function (path, callback){
+            var _path = node_path.resolve(path);
+            if(!node_fs.existsSync(_path)){
+                _path = this.__resolve(path);
+            }
+
+            if(node_fs.existsSync(_path)){
+                callback && callback(path, _path);
+                return require(path);
+            }
         }
     }
 });
