@@ -107,7 +107,12 @@ module.exports = zn.Class({
                 _newValue = _values[_key];
 
                 if (_defaultValue == undefined && _newValue === undefined){
-                    throw new Error("Value of http request parameter('" + _key + "') is Required.");
+                    throw new zn.ERROR.HttpRequestError({
+                        name: 'ParameterRequiredError',
+                        code: 400,
+                        message: "Parameter Is Missing.",
+                        details: "Value of http request parameter('" + _key + "') is Required."
+                    });
                 }
 
                 switch (zn.type(_defaultValue)) {
@@ -116,13 +121,23 @@ module.exports = zn.Class({
                             _reg = _defaultValue.regexp;
 
                         if(_reg && !_reg.test(_value)){
-                            throw new Error("Value of http request parameter('" + _key + "') is Invalid.");
+                            throw new zn.ERROR.HttpRequestError({
+                                name: 'ParameterInvalidError',
+                                code: 400,
+                                message: "Parameter Is Invalid.",
+                                details: "Value of http request parameter('" + _key + "') is Invalid."
+                            });
                         }
                         break;
                     case 'function':
                         var _temp = _defaultValue(_newValue, this);
                         if(typeof _temp == 'string'){
-                            throw new Error(_temp);
+                            throw new zn.ERROR.HttpRequestError({
+                                name: 'ParameterError',
+                                code: 400,
+                                message: "Bad Request.",
+                                details: _temp
+                            });
                         }
                         break;
                 }

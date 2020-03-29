@@ -1,4 +1,5 @@
 module.exports = zn.ERROR = {
     ZNError: require('./ZNError'),
-    HttpRequestError: require('./HttpRequestError')
+    HttpRequestError: require('./HttpRequestError'),
+    HttpResponseError: require('./HttpResponseError')
 }

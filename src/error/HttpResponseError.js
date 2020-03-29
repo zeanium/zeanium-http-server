@@ -1,4 +1,4 @@
-module.exports = zn.Error('HTTP_REQUEST_ERROR', {
+module.exports = zn.Error('HTTP_RESPONSE_ERROR', {
     properties: {
         
     },

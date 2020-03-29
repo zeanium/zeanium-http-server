@@ -97,7 +97,13 @@ module.exports = zn.Class({
                 }
             }
 
-            this.doError(serverResponse, 404, "Not Found.");
+            this.doError(serverResponse, 404, "Not Found Error.");
+            /*
+            this.doHttpError(clientRequest, serverResponse, new zn.ERROR.HttpRequestError({
+                code: 404,
+                message: 'Not Found Error.',
+                details: "[ " + clientRequest.method + " ]: " + clientRequest.url + " can’t be found."
+            }));*/
         },
         doStatic: function (clientRequest, serverResponse){
             var _stats = clientRequest.stats;
@@ -146,23 +152,49 @@ module.exports = zn.Class({
             }
 
             this.doError(serverResponse, 403, "You are not authorized to view this directory or page using the credentials provided.");
+            /*
+            this.doHttpError(clientRequest, serverResponse, new zn.ERROR.HttpRequestError({
+                code: 403,
+                message: 'HTTP/1.1 401 Unauthorized.',
+                details: "You are not authorized to view this directory or page using the credentials provided."
+            }));*/
         },
         doError: function (serverResponse, code, message){
             serverResponse.writeHead(code, message);
             serverResponse.end();
         },
         doHttpError: function (clientRequest, serverResponse, err){
-            if(err.details){
-                serverResponse.write(err.details);
+            if(!serverResponse.writable || serverResponse.finished){
+                return;
             }
-            if(err.message){
-                serverResponse.statusMessage = err.message;
-            }
-            if(err.code){
-                serverResponse.statusCode = err.code;
-            }
-            serverResponse.end();
-        },
 
+            var _contentType = clientRequest.headers['content-type'];
+            if(_contentType && _contentType.toLowerCase().indexOf('application/json') != -1){
+                serverResponse.write(JSON.stringify({
+                    name: err._name,
+                    code: err._code,
+                    message: err._message,
+                    details:  err._details
+                }));
+            }else {
+                if(err._details){
+                    serverResponse.write(err._name + ': ' + err._details);
+                }
+            }
+            
+            if(err._message){
+                serverResponse.statusMessage = err._message;
+            }
+            if(err._code){
+                serverResponse.statusCode = err._code;
+            }
+
+            /*
+            if(err._code && err._message){
+                serverResponse.writeHead(err._code, err._message);
+            }*/
+            
+            serverResponse.end();
+        }
     }
 });
