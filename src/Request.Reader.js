@@ -11,7 +11,10 @@ module.exports = zn.Class({
         $data: null,
         $post: null,
         $get: null,
-        $files: null
+        $files: null,
+        $params: null,
+        $unmatchs: null,
+        chain: null
     },
     methods: {
         init: function (){
@@ -19,6 +22,46 @@ module.exports = zn.Class({
             this._$post = {};
             this._$get = {};
             this._$files = {};
+            this._$params = {};
+            this._$unmatchs = [];
+        },
+        nextReload: function (route){
+            if(!route) return;
+            var _application = route.application,
+                _chain = route.chain,
+                _params = route.params, 
+                _unmatchs = route.unmatchs;
+            if(this._application != _application){
+                this._application = _application;
+            }
+            if(this._chain !== _chain) {
+                this._chain = _chain;
+            }
+
+            if(this._$params !== _params) {
+                this._$params = _params || {};
+            }
+            if(this._$unmatchs !== _unmatchs) {
+                this._$unmatchs = _unmatchs || {};
+            }
+
+            return this;
+        },
+        next: function (response){
+            if(this._chain){
+                this._chain.next(this, response);
+            }
+
+            return this;
+        },
+        getPathParams: function (){
+            return this._$params;
+        },
+        getPathParamsValue: function (name){
+            return this._$params[name];
+        },
+        getUnmatchs: function (){
+            return this._$unmatchs;
         },
         getJSON: function (inName){
             var _value = this.getValue(inName);
@@ -39,9 +82,9 @@ module.exports = zn.Class({
         },
         getValue: function (inName) {
             if(inName){
-                return this._$data[inName];
+                return this._$data[inName] || this._$params[inName];
             } else {
-                return this._$data;
+                return zn.deepAssign({}, this._$data, this._$params);
             }
         },
         setValue: function (inKey, inValue){

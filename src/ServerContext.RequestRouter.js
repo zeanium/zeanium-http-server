@@ -3,21 +3,24 @@
  */
 var Request = require('./Request._.js');
 var Response = require('./Response._.js');
+var RouteChain = require('./RouteChain');
 
 module.exports = zn.Class({
     methods: {
-        getRouter: function (path) {
-            return this._routers[path];
+        getRouteChain: function (path, routes) {
+            var _routes = this._pathMatcher.matchRoutes(path, routes || this._routes);
+            if(_routes.length) {
+                return new RouteChain(_routes, this);
+            }
         },
-        acceptDispatcherRequest: function (clientRequest, serverResponse){
-            var _router = clientRequest.router;
-            if(!_router){return;}
-            var _request,
-                _response;
+        acceptDispatcherRequest: function (route, clientRequest, serverResponse){
+            if(!route) return;
+            var _request = null,
+                _response = null;
             if(clientRequest.parent){
                 _request = clientRequest.parent;
             } else {
-                _request = new Request(clientRequest, _router.application, this);
+                _request = new Request(clientRequest, route.route.application, this);
                 clientRequest.parent = _request;
             }
 
@@ -28,30 +31,27 @@ module.exports = zn.Class({
                 serverResponse.parent = _response;
             }
 
-            return _request.parseServerRequest(()=>this.doRouter(_router, _request, _response)), this;
+            return _request.parseServerRequest(()=>this.doRoute(route, _request, _response)), this;
         },
-        doRouter: function (router, request, response){
+        doRoute: function (route, request, response){
             try {
-                if(zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "doRouter", [router, request, response, this]) === false){
+                if(zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "doRoute", [route, request, response, this]) === false){
                     return false;
                 };
-                zn.extend(request._$get, router.pathArgv);
-                var _validate = router.validate,
-                    _controller = router.controller,
-                    _action = router.action,
-                    _meta = _controller.member(_action).meta || {},
-                    _values = this.__validateRouterMeta(_meta, request);
-
-                if(!_values){
-                    return false;
-                }
-
+                var _route = route.route,
+                    _application = _route.application,
+                    _validate = _route.validate,
+                    _controller = _route.controller,
+                    _action = _route.action,
+                    _meta = _controller.member(_action).meta || {};
+                
+                request.nextReload(route);
+                if(!this.__validateRouteMeta(_meta, request)) return;
                 if(_validate === undefined){
                     _validate = _controller.constructor.getMate('validate');
                 }
 
-                var _argv = [request, response, router.application, this, router];
-
+                var _argv = [request, response, _application, this, _route];
                 if(_validate === undefined) {
                     return _controller[_action].apply(_controller, _argv);
                 }
@@ -64,7 +64,7 @@ module.exports = zn.Class({
                     return _controller[_action].apply(_controller, _argv);
                 }
 
-                if(typeof _validate == 'function' && _validate.call(_controller, request, response, router) !== false){
+                if(typeof _validate == 'function' && _validate.call(_controller, request, response, _route) !== false){
                     return _controller[_action].apply(_controller, _argv);
                 }
 
@@ -77,7 +77,7 @@ module.exports = zn.Class({
                 throw error;
             }
         },
-        __validateRouterMeta: function (meta, request){
+        __validateRouteMeta: function (meta, request){
             if(meta){
                 var _requestMethod = request.clientRequest.method,
                     _method = meta.method || 'GET&POST';

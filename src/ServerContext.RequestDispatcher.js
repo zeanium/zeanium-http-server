@@ -12,6 +12,7 @@ module.exports = zn.Class({
     },
     methods: {
         __initAccept: function (clientRequest, serverResponse){
+            if(clientRequest.meta) return;
             clientRequest.meta = node_url.parse(clientRequest.url, true);
             clientRequest.currentTimestamp = (new Date()).getTime();
 
@@ -62,6 +63,7 @@ module.exports = zn.Class({
             return this;
         },
         accept: function (clientRequest, serverResponse){
+            if(this.execMiddleware("requestAcceptBefore", clientRequest, serverResponse) === false) return;
             this.__initAccept(clientRequest, serverResponse);
             if(this.execMiddleware("requestAccept", clientRequest, serverResponse) === false) return;
             this.doRequest(clientRequest, serverResponse);
@@ -69,26 +71,33 @@ module.exports = zn.Class({
         doRequest: function (clientRequest, serverResponse){
             var _return = this.execMiddleware("doRequest", clientRequest, serverResponse);
             if(_return === false){ return false; }
-            var _path = this.formatToAbsolutePath(clientRequest.meta.pathname);
+            var _pathname = clientRequest.meta.pathname,
+                _path = this.formatToAbsolutePath(_pathname);
+
             if(node_fs.existsSync(_path)){
                 clientRequest.root = _path;
                 clientRequest.stats = node_fs.statSync(_path);
                 return this.doStatic(clientRequest, serverResponse);
             }
-            var _router = this.getRouter(clientRequest.meta.pathname);
-            if(_router){
-                clientRequest.router = _router;
-                return this.acceptDispatcherRequest(clientRequest, serverResponse);
+            var _chain = this.getRouteChain(_pathname);
+            if(_chain){
+                return _chain.begin(clientRequest, serverResponse);
             }
-            var _fragments = clientRequest.meta.pathname.split(node_path.sep);
+
+            var _fragments = _pathname.split(node_path.sep);
             _fragments = _fragments.filter(fragment=>fragment.length);
-            clientRequest.meta.fragments = _fragments;
-            var _app = this._apps[_fragments[0]];
-            if(_app) {
-                _app.acceptRequest(clientRequest, serverResponse);
-            } else {
-                this.doError(serverResponse, 404, "Not Found.");
+            var _appName = _fragments.shift(),
+                _application = this._apps[_appName];
+            if(_application){
+                var _path = node_path.join(_application._webRoot, _fragments.join(node_path.sep));
+                if(node_fs.existsSync(_path)){
+                    clientRequest.root = _path;
+                    clientRequest.stats = node_fs.statSync(_path);
+                    return this.doStatic(clientRequest, serverResponse);
+                }
             }
+
+            this.doError(serverResponse, 404, "Not Found.");
         },
         doStatic: function (clientRequest, serverResponse){
             var _stats = clientRequest.stats;

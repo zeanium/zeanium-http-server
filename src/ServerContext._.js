@@ -7,6 +7,7 @@ var ServerContextDeployer = require('./ServerContext.Deployer.js');
 var ServerContextRequestDispatcher = require('./ServerContext.RequestDispatcher.js');
 var ServerContextRequestRouter = require('./ServerContext.RequestRouter.js');
 var MemorySessionContext = require('./session/MemorySessionContext');
+var PathMatcher = require('./PathMatcher');
 
 module.exports = zn.Class({
     mixins: [ ServerContextDeployer, ServerContextRequestDispatcher, ServerContextRequestRouter ],
@@ -14,10 +15,12 @@ module.exports = zn.Class({
         config: null,
         server: null,
         path: null,
-        root: null,
+        pathMatcher: null,
+        root: './',
+        webRoot: './',
         url: null,
         apps: null,
-        routers: null,
+        routes: null,
         modules: null,
         sessionContext: null
     },
@@ -25,11 +28,14 @@ module.exports = zn.Class({
         init: function (config, server){
             this.super(config, server);
             this._config = config;
-            this.sets({
-                server: server,
-                path: __dirname,
-                url: this.__parseURL(config.host, config.port),
-                root: node_path.join(process.cwd(), config.catalog)
+            this._server = server;
+            this._path = __dirname;
+            this._url = this.__parseURL(config.host, config.port);
+            this._root = node_path.resolve(process.cwd(), (config.root || './'));
+            this._webRoot = node_path.resolve(process.cwd(), (config.web_root || './'));
+            this._pathMatcher = new PathMatcher({
+                pathSeparator: config.pathSeparator,
+                pathParameterSymbol: config.pathParameterSymbol
             });
             this.__initial(config);
             this.__initSessionContext();
@@ -37,15 +43,15 @@ module.exports = zn.Class({
             this.__loadingCompleted();
         },
         formatToAbsolutePath: function (path){
-            return node_path.join(this._root, path);
+            return node_path.join(this._webRoot, path);
         },
         registerApplication: function (application){
             this._apps[application.config.deploy] = application;
-            return zn.extend(this._routers, application.routers), this;
+            return this._routes = this._routes.concat(application.routes), this;
         },
         __initial: function (config){
             this._apps = {};
-            this._routers = {};
+            this._routes = [];
             this._modules = this.__loadPackages(config.modules);
         },
         __initSessionContext: function (){
@@ -71,8 +77,8 @@ module.exports = zn.Class({
         },
         __convertControllerToRouters: function (Controller, application){
             var _deploy = application ? application._config.deploy : '',
-                _routers = {},
-                _router = null,
+                _routes = [],
+                _route = null,
                 _member = null;
 
             var _key = Controller.getMeta('controller') || Controller.name;
@@ -81,27 +87,39 @@ module.exports = zn.Class({
             Controller._methods_.forEach(function (method){
                 if(method!="init"){
                     _member = Controller.member(method);
-                    if(_member.meta.router !== null){
-                        _router = _member.meta.router || _member.name;
-                        _router = node_path.join(node_path.sep, _deploy, _key, _router);
-                        _routers[_router] = {
-                            action: method,
-                            application: application,
-                            controller: _controller,
-                            router: _router,
-                            handler: _member,
-                            meta: {
-                                deploy: _deploy,
-                                controller: _key,
-                                router: _router
-                            },
-                            validate: (_member.meta.validate !== undefined) ? _member.meta.validate : _validate
-                        };
+                    _route = _member.meta.route || _member.name;
+                    switch(typeof _route){
+                        case 'string':
+                            _route = {
+                                path: _route
+                            };
+                            break;
+                        case 'function':
+                            _route = _route.call(_controller, method, _member);
+                            break;
+                        case 'object':
+                            break;
+                        default :
+                            return;
                     }
+                    _route.path = node_path.join(node_path.sep, _deploy, _key, _route.path);
+                    _route.paths = this._pathMatcher.parseRoutePath(_route.path);
+                    _route = zn.deepAssign({
+                        action: method,
+                        application: application,
+                        controller: _controller,
+                        handler: _member,
+                        meta: {
+                            deploy: _deploy,
+                            controller: _key
+                        },
+                        validate: (_member.meta.validate !== undefined) ? _member.meta.validate : _validate
+                    }, _route);
+                    _routes.push(_route);
                 }
-            });
+            }.bind(this));
 
-            return _routers;
+            return _routes;
         },
         __loadPackages: function (paths){
             var _exports = {};

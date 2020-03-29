@@ -7,11 +7,11 @@ var ERRORS = require('./static/ERRORS');
 module.exports = zn.Class({
     methods: {
         writeHead: function (statusCode, statusMessage, headers){
-            if(this._serverResponse.finished) return this;
+            if(this._serverResponse.finished || this._serverResponse.writableEnded || this._serverResponse.writableFinished) return this;
             return this._serverResponse.writeHead(statusCode, statusMessage, headers), this;
         },
         write: function (chunk, encoding, callback){
-            if(this._serverResponse.finished) return this;
+            if(this._serverResponse.finished || this._serverResponse.writableEnded || this._serverResponse.writableFinished) return this;
             return this._serverResponse.write(chunk, encoding, callback), this;
         },
         success: function (content, code, message){

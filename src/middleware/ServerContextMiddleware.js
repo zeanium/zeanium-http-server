@@ -6,13 +6,16 @@ var ServerContextMiddleware = zn.Middleware({
         fileChanged: function (){
             
         },
+        requestAcceptBefore: function (serverRequest, serverResponse){
+            
+        },
         requestAccept: function (serverRequest, serverResponse){
             
         },
-        doRouter: function (router, request, response){
+        doRoute: function (route, request, response){
             
         },
-        loaded: function (router, request, response){
+        loaded: function (route, request, response){
             
         },
         loadCompleted: function (timestamp, urls, contenxt){

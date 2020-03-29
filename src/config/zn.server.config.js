@@ -12,7 +12,7 @@ module.exports = {
     https: false,
     host: '0.0.0.0',
     port: 8888,
-    catalog: '/',
+    cwd: '/',
     watcher: {
         watching: true,
         cwd: '/',

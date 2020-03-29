@@ -12,7 +12,7 @@ var ApplicationMiddleware = zn.Middleware({
         initControllers: function (application, controllers){
 
         },
-        initRouters: function (application, routers){
+        initRoutes: function (application, routers){
 
         }
     }

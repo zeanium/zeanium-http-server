@@ -8,16 +8,15 @@ module.exports = zn.Class({
     mixins: [ RequestReader ],
     properties: {
         application: null,
-        serverContext: null,
         clientRequest: null,
+        serverContext: null,
         cookies: null
     },
     methods: {
         init: function (clientRequest, application, serverContext){
             this._clientRequest = clientRequest;
-            this._application = application;
+            this._application = application,
             this._serverContext = serverContext;
-            this._cookies = [];
             this.__initCookie();
         },
         getContextPath: function (){
@@ -102,6 +101,7 @@ module.exports = zn.Class({
             return _data;  
         },
         __initCookie: function (){
+            this._cookies = [];
             var _cookie = this._clientRequest.headers.cookie || this._clientRequest.headers.Cookie||'',
                 _ary = null;
             _cookie.split(';').forEach(function (item, index){
