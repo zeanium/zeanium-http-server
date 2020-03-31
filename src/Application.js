@@ -96,11 +96,18 @@ module.exports = zn.Class({
         },
         __initFileUploadConfig: function (config){
             var _formidable = zn.overwrite({}, this.serverContext.config.formidable, this.config.formidable, config);
-            var _root = _formidable.root || this.serverContext.root;
-            if(_root){
-                _formidable.uploadDir = node_path.join(_root, _formidable.uploadDir);
-                _formidable.savedDir = node_path.join(_root, _formidable.savedDir);
+            var _webRoot = _formidable.webRoot || this.serverContext.webRoot;
+            if(!_webRoot){
+                _webRoot = _formidable.root || this.serverContext.root;
             }
+
+            if(!node_path.isAbsolute(_formidable.uploadDir) && _webRoot){
+                _formidable.uploadDir = node_path.join(_webRoot, _formidable.uploadDir);
+            }
+            if(!node_path.isAbsolute(_formidable.savedDir) && _webRoot){
+                _formidable.savedDir = node_path.join(_webRoot, _formidable.savedDir);
+            }
+            
             this.__initPath(_formidable.uploadDir);
             this.__initPath(_formidable.savedDir);
 
