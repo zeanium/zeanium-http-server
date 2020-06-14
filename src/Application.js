@@ -35,14 +35,25 @@ module.exports = zn.Class({
             zn.info("Application[ ", config.deploy, " ] Loaded.");
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "loaded", [this, config, serverContext]);
         },
+        resolveModel: function (modelName){
+            return this._models[modelName] || this._models[config.deploy + '.' + modelName];
+        },
         __initial: function (config, serverContext){
+            var _deploy = config.deploy;
             this.__initModules(config.modules);
             this.__loadMiddlewares(config.middlewares);
-            this._models = this.__loadPackages(config.models, function (key, model){
+            this._models = {};
+            this.__loadPackages(config.models, function (key, model){
+                model.setMeta('application', _deploy);
                 if(config.table_prefix){
                     model.setMeta('tablePrefix', config.table_prefix);
+                    this._models[_deploy + '.' + config.table_prefix + key] = this._serverContext._models[_deploy + '.' + config.table_prefix + key] = model;
                 }
-            });
+                if(model.getMeta('alias')){
+                    this._models[_deploy + '.' + model.getMeta('alias')] = this._serverContext._models[_deploy + '.' + model.getMeta('alias')] = model;
+                }
+                this._models[_deploy + '.' + key] = this._serverContext._models[_deploy + '.' + key] = model;
+            }.bind(this));
             zn.extend(this._controllers,  this.__loadPackages(config.controllers));
             this._routes = this.__initRoutes(this._controllers);
             this._formidable = this.__initFileUploadConfig();

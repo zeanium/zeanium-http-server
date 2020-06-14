@@ -21,6 +21,7 @@ module.exports = zn.Class({
         url: null,
         apps: null,
         routes: null,
+        models: null,
         modules: null,
         sessionContext: null
     },
@@ -30,6 +31,7 @@ module.exports = zn.Class({
             this._config = config;
             this._server = server;
             this._path = __dirname;
+            this._models = {};
             this._url = this.__parseURL(config.host, config.port);
             this._root = node_path.resolve(process.cwd(), (config.root || './'));
             this._webRoot = node_path.resolve(process.cwd(), (config.web_root || './'));
@@ -41,6 +43,9 @@ module.exports = zn.Class({
             this.__initSessionContext();
             this.__deploy();
             this.__loadingCompleted();
+        },
+        resolveModel: function (modelName){
+            return this._models[modelName];
         },
         formatToAbsolutePath: function (path){
             return node_path.join(this._webRoot, path);
