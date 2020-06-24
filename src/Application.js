@@ -43,6 +43,7 @@ module.exports = zn.Class({
             this.__initModules(config.modules);
             this.__loadMiddlewares(config.middlewares);
             this._models = {};
+            this._modelArray = [];
             this.__loadPackages(config.models, function (key, model){
                 model.setMeta('application', _deploy);
                 if(config.table_prefix){
@@ -52,6 +53,7 @@ module.exports = zn.Class({
                 if(model.getMeta('alias')){
                     this._models[_deploy + '.' + model.getMeta('alias')] = this._serverContext._models[_deploy + '.' + model.getMeta('alias')] = model;
                 }
+                this._modelArray.push(model);
                 this._models[_deploy + '.' + key] = this._serverContext._models[_deploy + '.' + key] = model;
             }.bind(this));
             zn.extend(this._controllers,  this.__loadPackages(config.controllers));

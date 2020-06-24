@@ -41,6 +41,9 @@ module.exports = zn.Class({
         __onRequest: function (clientRequest, serverResponse){
             try{
                 clientRequest.url = node_path.normalize(clientRequest.url);
+                if(clientRequest.method == 'OPTIONS'){
+                    return this.__handlerOptionsMethod(clientRequest, serverResponse), false;
+                }
                 var _return = zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "request", [clientRequest, serverResponse, this._server]);
                 if(_return !== false){
                     this._server._context.accept(clientRequest, serverResponse);
@@ -49,6 +52,22 @@ module.exports = zn.Class({
                 zn.error(err.stack);
                 this._server._context.doHttpError(clientRequest, serverResponse, err);
             }
+        },
+        __handlerOptionsMethod: function (clientRequest, serverResponse){
+            var _package = require('../package.json');
+            serverResponse.writeHead(200, {
+                'Access-Control-Allow-Origin': (clientRequest.headers.origin || clientRequest.headers.host || clientRequest.headers.Host || ''),
+                'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
+                'Access-Control-Allow-Headers': 'Accept,Accept-Charset,Accept-Encoding,Accept-Language,Connection,Content-Type,Cookie,DNT,Host,Keep-Alive,Origin,Referer,User-Agent,X-CSRF-Token,X-Requested-With',
+                "Access-Control-Allow-Credentials": true,
+                'Access-Control-Max-Age': '3600',//一个小时时间
+                'X-Powered-By': (_package.name + '@' + _package.version),
+                'Content-Type': 'text/html;charset=utf-8',
+                'Trailer': 'Content-MD5'
+            });
+            serverResponse.write('<a href="https://github.com/zeanium/zeanium-http-server">' + _package.name + '</a>');
+            serverResponse.addTrailers({'Content-MD5': zn.uuid()});
+            serverResponse.end();
         },
         __onUpgrade: function (){
             zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "upgrade", Array.prototype.slice.call(arguments).concat([this]));

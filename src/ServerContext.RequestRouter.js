@@ -7,8 +7,8 @@ var RouteChain = require('./RouteChain');
 
 module.exports = zn.Class({
     methods: {
-        getRouteChain: function (path, routes) {
-            var _routes = this._pathMatcher.matchRoutes(path, routes || this._routes);
+        getRouteChain: function (path, routes, clientRequest) {
+            var _routes = this._pathMatcher.matchRoutes(path, routes || this._routes, clientRequest);
             if(_routes.length) {
                 return new RouteChain(_routes, this);
             }
@@ -46,7 +46,7 @@ module.exports = zn.Class({
                     _meta = _controller.member(_action).meta || {};
                 
                 request.nextReload(route);
-                if(!this.__validateRouteMeta(_meta, request)) return;
+                if(!this.__validateRouteMeta(_meta, request, response)) return;
                 if(_validate === undefined){
                     _validate = _controller.constructor.getMate('validate');
                 }
@@ -73,27 +73,35 @@ module.exports = zn.Class({
                     message: "HTTP/1.1 401 Unauthorized.",
                     details: "HTTP/1.1 401 Unauthorized, You Need Login Into System First."
                 });
-            } catch (error) {
-                throw error;
+            } catch (err) {
+                zn.error(err._stack || err.stack);
+                this.doHttpError(request.clientRequest, response.serverResponse, err);
             }
         },
-        __validateRouteMeta: function (meta, request){
-            if(meta){
-                var _requestMethod = request.clientRequest.method,
-                    _method = meta.method || 'GET&POST';
-
-                if(_method.indexOf(_requestMethod) === -1){
-                    throw new zn.ERROR.HttpRequestError({
-                        code: 405,
-                        message: "Method Not Allowed.",
-                        details: "The Resource Only Allow [ " + _method + " ] Method, But The Method Of Request Is " + _requestMethod + "."
-                    });
+        __validateRouteMeta: function (meta, request, response){
+            try {
+                if(meta){
+                    var _requestMethod = request.clientRequest.method,
+                        _method = meta.method || 'GET&POST';
+    
+                    if(_method.indexOf(_requestMethod) === -1){
+                        throw new zn.ERROR.HttpRequestError({
+                            code: 405,
+                            message: "Method Not Allowed.",
+                            details: "The Resource Only Allow [ " + _method + " ] Method, But The Method Of Request Is " + _requestMethod + "."
+                        });
+                    }
+    
+                    return request.validateRequestParameters(meta.argv);
                 }
-
-                return request.validateRequestParameters(meta.argv);
+    
+                return request.validateRequestParameters({});
+            } catch (err) {
+                zn.error(err._stack || err.stack);
+                this.doHttpError(request.clientRequest, response.serverResponse, err);
             }
 
-            return request.validateRequestParameters({});
+            return false;
         }
     }
 });

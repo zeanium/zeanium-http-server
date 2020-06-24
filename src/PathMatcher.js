@@ -18,13 +18,17 @@ module.exports = zn.Class({
                 }
             }
         },
-        matchRoutes: function (requestPath, routes){
+        matchRoutes: function (requestPath, routes, clientRequest){
             routes = routes || [];
             var _routes = [],
                 _route = null,
-                _data = null;
+                _data = null,
+                _method = clientRequest.method.toLocaleLowerCase();
             for(var i = 0, _len = routes.length; i < _len; i++){
                 _route = routes[i];
+                if((_route.handler.meta.method||"GET").toLocaleLowerCase().indexOf(_method) == -1){
+                    continue;
+                }
                 _data = this.__matchRoute(_route, requestPath);
                 if(_data){
                     _routes.push({

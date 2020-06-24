@@ -21,7 +21,7 @@ var HttpServerMiddleware = zn.Middleware({
         connection: function (server){
             
         },
-        request: function (server){
+        request: function (clientRequest, serverResponse, server){
             
         },
         upgrade: function (server){

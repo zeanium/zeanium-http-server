@@ -63,10 +63,17 @@ module.exports = zn.Class({
             return this;
         },
         accept: function (clientRequest, serverResponse){
-            if(this.execMiddleware("requestAcceptBefore", clientRequest, serverResponse) === false) return;
-            this.__initAccept(clientRequest, serverResponse);
-            if(this.execMiddleware("requestAccept", clientRequest, serverResponse) === false) return;
-            this.doRequest(clientRequest, serverResponse);
+            try {
+                if(this.execMiddleware("requestAcceptBefore", clientRequest, serverResponse) === false) return;
+                this.__initAccept(clientRequest, serverResponse);
+                if(this.execMiddleware("requestAccept", clientRequest, serverResponse) === false) return;
+                this.doRequest(clientRequest, serverResponse);
+            } catch (error) {
+                if(serverResponse && !serverResponse.finished){
+                    zn.error(error.stack);
+                    this.doHttpError(clientRequest, serverResponse, error);
+                }
+            }
         },
         doRequest: function (clientRequest, serverResponse){
             var _return = this.execMiddleware("doRequest", clientRequest, serverResponse);
@@ -79,7 +86,7 @@ module.exports = zn.Class({
                 clientRequest.stats = node_fs.statSync(_path);
                 return this.doStatic(clientRequest, serverResponse);
             }
-            var _chain = this.getRouteChain(_pathname);
+            var _chain = this.getRouteChain(_pathname, null, clientRequest);
             if(_chain){
                 return _chain.begin(clientRequest, serverResponse);
             }
@@ -164,7 +171,7 @@ module.exports = zn.Class({
             serverResponse.end();
         },
         doHttpError: function (clientRequest, serverResponse, err){
-            if(!serverResponse.writable || serverResponse.finished){
+            if(!clientRequest || !serverResponse || serverResponse.finished || !serverResponse.writable){
                 return;
             }
 
@@ -177,7 +184,9 @@ module.exports = zn.Class({
                     details:  err._details
                 }));
             }else {
-                if(err._details){
+                if(process.env.NODE_ENV == 'development' || this._config.mode == 'development'){
+                    serverResponse.write(err._stack);
+                } else {
                     serverResponse.write(err._name + ': ' + err._details);
                 }
             }
@@ -189,10 +198,11 @@ module.exports = zn.Class({
                 serverResponse.statusCode = err._code;
             }
 
-            /*
-            if(err._code && err._message){
-                serverResponse.writeHead(err._code, err._message);
-            }*/
+            if(this._config.headers){
+                for(var key in this._config.headers){
+                    serverResponse.setHeader(key, this._config.headers[key]);
+                }
+            }
             
             serverResponse.end();
         }

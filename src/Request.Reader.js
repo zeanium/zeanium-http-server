@@ -101,12 +101,11 @@ module.exports = zn.Class({
                 _newValue = null,
                 _args = args || {},
                 _values = zn.extend({}, this._$get, this._$post);
-
             for(var _key in _args){
                 _defaultValue = _args[_key];
                 _newValue = _values[_key];
 
-                if (_defaultValue == undefined && _newValue === undefined){
+                if (_defaultValue !== undefined && _newValue === undefined){
                     throw new zn.ERROR.HttpRequestError({
                         name: 'ParameterRequiredError',
                         code: 400,
@@ -163,11 +162,11 @@ module.exports = zn.Class({
             return this;
         },
         parseServerRequestFromData: function (clientRequest, callback){
-            if(clientRequest.parent){
+            if(clientRequest.parent && this._parsed){
                 return callback && callback(null, this._$post, this._$files), false;
             }
             var _ct = clientRequest.headers['content-type']||'';
-            if(_ct.toLowerCase().indexOf('text/xml')!=-1){
+            if(_ct.toLowerCase().indexOf('text/xml') != -1){
                 return false;
             }
             
@@ -177,6 +176,7 @@ module.exports = zn.Class({
                 } else {
                     this._$post = fields;
                     this._$files = files;
+                    this._parsed = true;
                 }
                 callback && callback(error, fields, files);
             }.bind(this));
