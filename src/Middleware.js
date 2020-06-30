@@ -36,6 +36,8 @@ zn.middleware = zn.Class({
                 CONTROLLER: "CONTROLLER",
                 COOKIE: "COOKIE",
                 HTTP_SERVER: "HTTP_SERVER",
+                REQUEST: "REQUEST",
+                RESPONSE: "RESPONSE",
                 SERVER: "SERVER",
                 SERVER_CONTEXT: "SERVER_CONTEXT",
                 SERVER_RESPONSE: "SERVER_RESPONSE",

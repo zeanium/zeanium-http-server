@@ -73,11 +73,18 @@ module.exports = zn.Class({
                 try {
                     return JSON.parse(_value);
                 } catch (err) {
-                    zn.error(new SyntaxError(err.message));
+                    throw new zn.ERROR.HttpRequestError({
+                        code: 400,
+                        message: err.message,
+                        detail: err.stack
+                    });
                 }
             }else {
-                zn.error(new TypeError("The value of http request parameter('" + inName + "') is " + this.getValue(inName) + ", but it is not json format."));
-                return {};
+                throw new zn.ERROR.HttpRequestError({
+                    code: 400,
+                    message: "Data Type Error",
+                    detail: "Request parameter '" + inName + "' is '" + this.getValue(inName) + "' is not json data."
+                });
             }
         },
         getValue: function (inName) {
@@ -107,10 +114,9 @@ module.exports = zn.Class({
 
                 if (_defaultValue !== undefined && _newValue === undefined){
                     throw new zn.ERROR.HttpRequestError({
-                        name: 'ParameterRequiredError',
                         code: 400,
-                        message: "Parameter Is Missing.",
-                        details: "Value of http request parameter('" + _key + "') is Required."
+                        message: "Missing Parameter Error.",
+                        detail: "Request parameter '" + _key + "' is required."
                     });
                 }
 
@@ -121,10 +127,9 @@ module.exports = zn.Class({
 
                         if(_reg && !_reg.test(_value)){
                             throw new zn.ERROR.HttpRequestError({
-                                name: 'ParameterInvalidError',
                                 code: 400,
                                 message: "Parameter Is Invalid.",
-                                details: "Value of http request parameter('" + _key + "') is Invalid."
+                                detail: "Value of http request parameter('" + _key + "') is Invalid."
                             });
                         }
                         break;
@@ -132,10 +137,9 @@ module.exports = zn.Class({
                         var _temp = _defaultValue(_newValue, this);
                         if(typeof _temp == 'string'){
                             throw new zn.ERROR.HttpRequestError({
-                                name: 'ParameterError',
                                 code: 400,
                                 message: "Bad Request.",
-                                details: _temp
+                                detail: _temp
                             });
                         }
                         break;
@@ -170,15 +174,24 @@ module.exports = zn.Class({
                 return false;
             }
             
-            this.__parseFormData(clientRequest, function(error, fields, files){
-                if(error){
-                    throw error;
-                } else {
+            this.__parseFormData(clientRequest, function(err, fields, files){
+                if(!err){
                     this._$post = fields;
                     this._$files = files;
                     this._parsed = true;
                 }
-                callback && callback(error, fields, files);
+                clientRequest.data = {
+                    data: Object.assign({}, this._$data),
+                    post: Object.assign({}, this._$post),
+                    get: Object.assign({}, this._$get),
+                    files: Object.assign({}, this._$files),
+                    params: Object.assign({}, this._$params),
+                    unmatchs: Array.from(this._$unmatchs),
+                }
+                var _return = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.REQUEST, "formParse", [err, fields, files, this]);
+                if(_return !== false) {
+                    callback && callback(err, fields, files);
+                }
             }.bind(this));
 
             return this;

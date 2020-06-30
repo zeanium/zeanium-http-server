@@ -14,31 +14,43 @@ module.exports = zn.Class({
         __initAccept: function (clientRequest, serverResponse){
             if(clientRequest.meta) return;
             clientRequest.meta = node_url.parse(clientRequest.url, true);
-            clientRequest.currentTimestamp = (new Date()).getTime();
-
-            if(this._config.timeout){
-                serverResponse.setTimeout(this._config.timeout, ()=>this.__doTimeout(clientRequest, serverResponse));
-            }
+            serverResponse.setTimeout(this._config.timeout || 20000, ()=>this.__doTimeout(clientRequest, serverResponse));
+            serverResponse.on('close', ()=>this.__doClose(clientRequest, serverResponse));
             serverResponse.on('finish', ()=>this.__doFinished(clientRequest, serverResponse));
-                
-            /*
-            if(this.config.session){
-                clientRequest.session = new Session(clientRequest, serverResponse, this);
-                if(clientRequest.session.validate() === false) return;
-            }*/
+            return this.execMiddleware("accept", clientRequest, serverResponse);
         },
-        __doTimeout: function (clientRequest, serverResponse){
-            this.__doFinished(clientRequest, serverResponse);
-        },
-        __doFinished: function (clientRequest, serverResponse){
+        __doClose: function (clientRequest, serverResponse){
             serverResponse.currentTimestamp = (new Date()).getTime();
             var _timestamp = serverResponse.currentTimestamp - clientRequest.currentTimestamp,
-                _code = serverResponse.statusCode;
+                _code = serverResponse.statusCode,
+                _nowString = zn.date.asString(new Date());
+            this._logger.requestStatus(clientRequest.url, {
+                method: clientRequest.method,
+                data: clientRequest.data,
+                code: _code,
+                time: _nowString,
+                timestamp: _timestamp + 'ms'
+            });
+            this._logger.writeRequest(_nowString, '[', clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
             if(_code > 199 && _code < 300){
-                zn.debug('[', clientRequest.method, _code, ']', clientRequest.url, _timestamp + 'ms');
+                zn.debug('[', clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
             }else{
-                zn.error('[', clientRequest.method, _code, ']', clientRequest.url, _timestamp + 'ms', serverResponse.statusMessage);
+                this._logger.writeError(_nowString, '[', clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
+                zn.error('[', clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
             }
+
+            this.execMiddleware("responseClose", clientRequest, serverResponse);
+        },
+        __doTimeout: function (clientRequest, serverResponse){
+            if(this.execMiddleware("responseTimeout", clientRequest, serverResponse) === false) return;
+            this.doHttpError(clientRequest, serverResponse, new zn.ERROR.HttpResponseError({
+                code: 408,
+                message: "Request Timeout.",
+                detail: "408 Request Timeout"
+            }));
+        },
+        __doFinished: function (clientRequest, serverResponse){
+            if(this.execMiddleware("responseFinish", clientRequest, serverResponse) === false) return;
         },
         execMiddleware: function (method, clientRequest, serverResponse){
             var _middlewares = zn.middleware.getMiddlewares(zn.middleware.TYPES.SERVER_CONTEXT),
@@ -55,7 +67,11 @@ module.exports = zn.Class({
                         continue;
                     }
                     if(_return === false){
-                        return this.doError(serverResponse, 503, "Service unavailable."), false;
+                        return this.doHttpError(clientRequest, serverResponse, new zn.ERROR.HttpRequestError({
+                            code: 503,
+                            message: "Service unavailable.",
+                            detail: "Service unavailable."
+                        })), false;
                     }
                 }
             }
@@ -69,10 +85,7 @@ module.exports = zn.Class({
                 if(this.execMiddleware("requestAccept", clientRequest, serverResponse) === false) return;
                 this.doRequest(clientRequest, serverResponse);
             } catch (error) {
-                if(serverResponse && !serverResponse.finished){
-                    zn.error(error.stack);
-                    this.doHttpError(clientRequest, serverResponse, error);
-                }
+                this.doHttpError(clientRequest, serverResponse, error);
             }
         },
         doRequest: function (clientRequest, serverResponse){
@@ -81,6 +94,7 @@ module.exports = zn.Class({
             var _pathname = clientRequest.meta.pathname,
                 _path = this.formatToAbsolutePath(_pathname);
 
+            this._logger.requestCount(clientRequest.url);
             if(node_fs.existsSync(_path)){
                 clientRequest.root = _path;
                 clientRequest.stats = node_fs.statSync(_path);
@@ -88,6 +102,7 @@ module.exports = zn.Class({
             }
             var _chain = this.getRouteChain(_pathname, null, clientRequest);
             if(_chain){
+                this._logger.writeRoute(zn.date.asString(new Date()), '[', clientRequest.method, _pathname, ']', clientRequest.url);
                 return _chain.begin(clientRequest, serverResponse);
             }
 
@@ -104,13 +119,11 @@ module.exports = zn.Class({
                 }
             }
 
-            this.doError(serverResponse, 404, "Not Found Error.");
-            /*
-            this.doHttpError(clientRequest, serverResponse, new zn.ERROR.HttpRequestError({
+            throw new zn.ERROR.HttpRequestError({
                 code: 404,
                 message: 'Not Found Error.',
-                details: "[ " + clientRequest.method + " ]: " + clientRequest.url + " can’t be found."
-            }));*/
+                detail: "[ " + clientRequest.method + " ]: " + clientRequest.url + " can not be found."
+            });
         },
         doStatic: function (clientRequest, serverResponse){
             var _stats = clientRequest.stats;
@@ -158,44 +171,46 @@ module.exports = zn.Class({
                 }
             }
 
-            this.doError(serverResponse, 403, "You are not authorized to view this directory or page using the credentials provided.");
-            /*
-            this.doHttpError(clientRequest, serverResponse, new zn.ERROR.HttpRequestError({
+            throw new zn.ERROR.HttpRequestError({
                 code: 403,
-                message: 'HTTP/1.1 401 Unauthorized.',
-                details: "You are not authorized to view this directory or page using the credentials provided."
-            }));*/
+                message: 'Unauthorized.',
+                detail: "You are not authorized to view this directory or page using the credentials provided."
+            });
         },
-        doError: function (serverResponse, code, message){
-            serverResponse.writeHead(code, message);
-            serverResponse.end();
+        doJSON: function (clientRequest, serverResponse, content){
+            var _encoding = 'utf-8';
+            serverResponse.setHeader('Content-Type', "application/json;charset=" + _encoding);
+            serverResponse.setHeader('Content-Length', Buffer.byteLength(content, _encoding));
+            serverResponse.writeHead(200, "OK");
+            serverResponse.end(content, _encoding);
         },
         doHttpError: function (clientRequest, serverResponse, err){
             if(!clientRequest || !serverResponse || serverResponse.finished || !serverResponse.writable){
                 return;
             }
+            zn.error(err.stack);
+            this._logger.writeError(zn.date.asString(new Date()), 'Error [', err.name, err.code, err.message, ']', err.detail, err.stack);
 
-            var _contentType = clientRequest.headers['content-type'];
-            if(_contentType && _contentType.toLowerCase().indexOf('application/json') != -1){
-                serverResponse.write(JSON.stringify({
-                    name: err._name,
-                    code: err._code,
-                    message: err._message,
-                    details:  err._details
-                }));
-            }else {
-                if(process.env.NODE_ENV == 'development' || this._config.mode == 'development'){
-                    serverResponse.write(err._stack);
-                } else {
-                    serverResponse.write(err._name + ': ' + err._details);
-                }
+            var _data = err.gets?err.gets():err,
+                _contentType = clientRequest.headers['content-type'] || '',
+                _content = JSON.stringify(_data);
+
+            if(_contentType.toLowerCase().indexOf('application/json') != -1){
+                return this.doJSON(clientRequest, serverResponse, _content);
+            }
+
+            if(process.env.NODE_ENV == 'development' || this._config.mode == 'development'){
+                serverResponse.write(_content);
+            } else {
+                serverResponse.write(_data.message + ': ' + _data.detail);
             }
             
-            if(err._message){
-                serverResponse.statusMessage = err._message;
+            if(err.message){
+                serverResponse.statusMessage = err.message;
             }
-            if(err._code){
-                serverResponse.statusCode = err._code;
+
+            if(err.code){
+                serverResponse.statusCode = err.code;
             }
 
             if(this._config.headers){

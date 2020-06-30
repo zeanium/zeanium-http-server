@@ -13,6 +13,16 @@ module.exports = {
     host: '0.0.0.0',
     port: 8888,
     cwd: '/',
+    log: {
+        dir: './log/',
+        file: 'output.log',
+        error: 'error.log',
+        route: 'route.log'
+    },
+    restart: {
+        timeout: 5000,
+        max: 5
+    },
     watcher: {
         watching: true,
         cwd: '/',
@@ -33,7 +43,7 @@ module.exports = {
         maxFields: 1000,
         multiples: true
     },
-    timeout: 12000,
+    timeout: 20000,
     cors: true,
     indexs: ['index.html', 'index.htm', 'default.html', 'default.htm'],
     session: {

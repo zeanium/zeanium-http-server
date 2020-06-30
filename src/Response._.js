@@ -19,7 +19,7 @@ module.exports = zn.Class({
             this._cookies = [];
             this._serverResponse = serverResponse;
             this._request = request;
-            serverResponse.on('finish', function (){
+            serverResponse.on('close', function (){
                 request.clearFiles();
             });
         },
@@ -77,7 +77,6 @@ module.exports = zn.Class({
                     _cors = zn.extend({}, this._request.application.config.cors, _cors);
                 }
             }
-
 
             return zn.overwrite({
                 'Access-Control-Allow-Origin': _origin,

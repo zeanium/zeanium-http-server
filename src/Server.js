@@ -121,11 +121,12 @@ module.exports = zn.Class({
                 config.protocol = 'http';
                 _server = new node_http.Server();
             }
-            new ServerEventListener(_server, this);
 
             if(config.port && config.host) {
                 _server.listen(config);
             }
+
+            new ServerEventListener(_server, this);
 
             return _server;
         },

@@ -1,5 +1,5 @@
 module.exports = zn.Controller('__$__', {
-    service: require('./ApplicationControllerService.js'),
+    Service: require('./ApplicationControllerService.js'),
     methods: {
         apis: {
             method: 'GET/POST',

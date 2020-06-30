@@ -8,6 +8,7 @@ var ServerContextRequestDispatcher = require('./ServerContext.RequestDispatcher.
 var ServerContextRequestRouter = require('./ServerContext.RequestRouter.js');
 var MemorySessionContext = require('./session/MemorySessionContext');
 var PathMatcher = require('./PathMatcher');
+var Logger = require('./Logger');
 
 module.exports = zn.Class({
     mixins: [ ServerContextDeployer, ServerContextRequestDispatcher, ServerContextRequestRouter ],
@@ -18,6 +19,7 @@ module.exports = zn.Class({
         pathMatcher: null,
         root: './',
         webRoot: './',
+        logger: null,
         url: null,
         apps: null,
         routes: null,
@@ -32,6 +34,7 @@ module.exports = zn.Class({
             this._server = server;
             this._path = __dirname;
             this._models = {};
+            this._logger = new Logger(config.log, this);
             this._url = this.__parseURL(config.host, config.port);
             this._root = node_path.resolve(process.cwd(), (config.root || './'));
             this._webRoot = node_path.resolve(process.cwd(), (config.web_root || './'));

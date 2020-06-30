@@ -12,7 +12,7 @@ var Controller = zn.Class({
                 this._context = context;
                 this._application = application;
                 zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.CONTROLLER, "initial", [this, application, context]);
-                var Service = this.constructor.getMeta('service');
+                var Service = this.constructor.getMeta('Service');
                 if(Service){
                     this._service = new Service(this, application, context);
                 }

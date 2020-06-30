@@ -3,17 +3,17 @@ var ZNError = zn.Class({
         name: null,
         code: null,
         message: null,
-        details: null,
+        detail: null,
         stack: null
     },
     methods: {
         init: {
             auto: true,
             value: function (argv){
-                this.name = argv.name || this.constructor.getMeta('name');
+                this.name = argv.name || this.constructor.getMeta('name') || 'ZNError';
                 this.code = argv.code;
                 this.message = argv.message;
-                this.details = argv.details;
+                this.detail = argv.detail;
                 this.stack = (new Error()).stack;
             }
         }

@@ -23,13 +23,16 @@ module.exports = zn.Class({
             httpServer.on('listening', this.__onListening.bind(this));
             httpServer.on("close", this.__onClose.bind(this));
         },
-        __onCheckContinue: function (){
+        __onCheckContinue: function (clientRequest, serverResponse){
             zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "checkContinue", Array.prototype.slice.call(arguments).concat([this]));
         },
-        __onCheckExpectation: function (){
+        __onCheckExpectation: function (clientRequest, serverResponse){
+            this._server._context.logger.writeError(zn.date.asString(new Date()), 'Error [', err.name, err.message, ']', err.stack);
             zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "checkExpectation", Array.prototype.slice.call(arguments).concat([this]));
         },
-        __onClientError: function (){
+        __onClientError: function (err, socket){
+            socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+            this._server._context.logger.writeError(zn.date.asString(new Date()), 'Error [', err.name, err.message, ']', err.stack);
             zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "clientError", Array.prototype.slice.call(arguments).concat([this]));
         },
         __onConnect: function (){
@@ -40,7 +43,9 @@ module.exports = zn.Class({
         },
         __onRequest: function (clientRequest, serverResponse){
             try{
+                zn.debug(clientRequest.url);
                 clientRequest.url = node_path.normalize(clientRequest.url);
+                clientRequest.currentTimestamp = (new Date()).getTime();
                 if(clientRequest.method == 'OPTIONS'){
                     return this.__handlerOptionsMethod(clientRequest, serverResponse), false;
                 }
@@ -49,7 +54,6 @@ module.exports = zn.Class({
                     this._server._context.accept(clientRequest, serverResponse);
                 }
             } catch (err){
-                zn.error(err.stack);
                 this._server._context.doHttpError(clientRequest, serverResponse, err);
             }
         },
@@ -66,7 +70,7 @@ module.exports = zn.Class({
                 'Trailer': 'Content-MD5'
             });
             serverResponse.write('<a href="https://github.com/zeanium/zeanium-http-server">' + _package.name + '</a>');
-            serverResponse.addTrailers({'Content-MD5': zn.uuid()});
+            serverResponse.addTrailers({ 'Content-MD5': zn.uuid().toLocaleLowerCase() });
             serverResponse.end();
         },
         __onUpgrade: function (){
@@ -81,6 +85,7 @@ module.exports = zn.Class({
             zn.info('Listening in ', this._httpServer.address());
         },
         __onClose: function (){
+            console.log('server -- close');
             zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "close", Array.prototype.slice.call(arguments).concat([this]));
         }
     }

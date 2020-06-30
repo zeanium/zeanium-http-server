@@ -9,17 +9,32 @@ var ServerContextMiddleware = zn.Middleware({
         requestAcceptBefore: function (serverRequest, serverResponse){
             
         },
+        accept: function (serverRequest, serverResponse){
+            
+        },
         requestAccept: function (serverRequest, serverResponse){
             
         },
-        doRoute: function (route, request, response){
+        responseTimeout: function (serverRequest, serverResponse){
             
+        },
+        responseClose: function (serverRequest, serverResponse){
+            
+        },
+        responseFinish: function (serverRequest, serverResponse){
+
         },
         loaded: function (route, request, response){
             
         },
         loadCompleted: function (timestamp, urls, contenxt){
             
+        },
+        doRoute: function (route, request, response){
+            
+        },
+        doError: function (){
+
         }
     }
 });
