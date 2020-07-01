@@ -188,7 +188,7 @@ module.exports = zn.Class({
             if(!clientRequest || !serverResponse || serverResponse.finished || !serverResponse.writable){
                 return;
             }
-            zn.error(err.stack);
+            zn.error(err);
             this._logger.writeError(zn.date.asString(new Date()), 'Error [', err.name, err.code, err.message, ']', err.detail, err.stack);
 
             var _data = err.gets?err.gets():err,
