@@ -21,6 +21,12 @@ module.exports = zn.Class({
             return this.JSONWrite(content, code || 500, message), this;
         },
         JSONWrite: function (content, code, message){
+            if(content instanceof Error) {
+                content = {
+                    message: content.message,
+                    stack: content.stack
+                };
+            }
             var _data = {
                 result: content
             };
@@ -31,6 +37,7 @@ module.exports = zn.Class({
             if(message){
                 _data.message = message;
             }
+            _data.timestamp = ((new Date()).getTime() - this._request._clientRequest.currentTimestamp) + 'ms';
             return this.HTTPSuccess(JSON.stringify(_data), "JSON"), false;
         },
         JSONSuccess: function (content, code, message){
