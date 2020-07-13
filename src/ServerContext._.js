@@ -11,7 +11,11 @@ var PathMatcher = require('./PathMatcher');
 var Logger = require('./Logger');
 
 module.exports = zn.Class({
-    mixins: [ ServerContextDeployer, ServerContextRequestDispatcher, ServerContextRequestRouter ],
+    mixins: [ 
+        ServerContextDeployer, 
+        ServerContextRequestDispatcher, 
+        ServerContextRequestRouter 
+    ],
     properties: {
         config: null,
         server: null,
@@ -25,6 +29,7 @@ module.exports = zn.Class({
         routes: null,
         models: null,
         modules: null,
+        formidable: null,
         sessionContext: null
     },
     methods: {
@@ -42,6 +47,7 @@ module.exports = zn.Class({
                 pathSeparator: config.pathSeparator,
                 pathParameterSymbol: config.pathParameterSymbol
             });
+            this._formidable = this.__initFileUploadConfig(),
             this.__initial(config);
             this.__initSessionContext();
             this.__deploy();
@@ -145,6 +151,40 @@ module.exports = zn.Class({
             }.bind(this));
 
             return _exports;
+        },
+        __initPath: function (path){
+            if(node_path.isAbsolute(path)){
+                return path;
+            }
+            var _paths = path.split(node_path.sep),
+                _path;
+            _paths.map(function (value){
+                if(value){
+                    _path = _path ? node_path.join(_path, value) : node_path.sep + value;
+                    if(!node_fs.existsSync(_path)){
+                        node_fs.mkdirSync(_path, 0766);
+                    }
+                }
+            });
+        },
+        __initFileUploadConfig: function (config){
+            var _formidable = zn.overwrite({}, this._config.formidable, config);
+            var _webRoot = _formidable.webRoot || this._webRoot;
+            if(!_webRoot){
+                _webRoot = _formidable.root || this._root;
+            }
+
+            if(!node_path.isAbsolute(_formidable.uploadDir) && _webRoot){
+                _formidable.uploadDir = node_path.join(_webRoot, _formidable.uploadDir);
+            }
+            if(!node_path.isAbsolute(_formidable.savedDir) && _webRoot){
+                _formidable.savedDir = node_path.join(_webRoot, _formidable.savedDir);
+            }
+            
+            this.__initPath(_formidable.uploadDir);
+            this.__initPath(_formidable.savedDir);
+
+            return _formidable;
         }
     }
 });

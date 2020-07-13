@@ -2,6 +2,9 @@ var SessionContextMiddleware = zn.Middleware({
     methods: {
         init: function (argv){
             this.super(argv);
+        },
+        loadControllers: function (Controllers, context){
+            
         }
     }
 });

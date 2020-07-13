@@ -16,11 +16,16 @@ module.exports = zn.Class({
             this.__loadAppsByConfig();
         },
         __loadDefault: function (){
-            this.__loadDefaultControllers();
+            this.__loadDefaultControllers([ ServerController ]);
             this.__loadDefaultApps();
         },
-        __loadDefaultControllers: function (){
-            return zn.extend(this._routers, this.__convertControllerToRouters(ServerController)), this;
+        __loadDefaultControllers: function (Controllers){
+            var _value = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "loadControllers", [Controllers, this]);
+            var _Controllers = _value || Controllers;
+            for(var Controller of _Controllers){
+                this._routes = this._routes.concat(this.__convertControllerToRouters(Controller));
+            }
+            return this;
         },
         __loadDefaultApps: function (){
             this.__loadDirectory(node_path.join(__dirname, 'www'));

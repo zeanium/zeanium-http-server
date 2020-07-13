@@ -58,7 +58,7 @@ module.exports = zn.Class({
             }.bind(this));
             zn.extend(this._controllers,  this.__loadPackages(config.controllers));
             this._routes = this.__initRoutes(this._controllers);
-            this._formidable = this.__initFileUploadConfig();
+            this._formidable = this._serverContext.__initFileUploadConfig(this._config);
 
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initial", [this, config, serverContext]);
         },
@@ -91,40 +91,6 @@ module.exports = zn.Class({
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initRoutes", [this, _routes]);
             
             return _routes;
-        },
-        __initPath: function (path){
-            if(node_path.isAbsolute(path)){
-                return path;
-            }
-            var _paths = path.split(node_path.sep),
-                _path;
-            _paths.map(function (value){
-                if(value){
-                    _path = _path ? node_path.join(_path, value) : node_path.sep + value;
-                    if(!node_fs.existsSync(_path)){
-                        node_fs.mkdirSync(_path, 0766);
-                    }
-                }
-            });
-        },
-        __initFileUploadConfig: function (config){
-            var _formidable = zn.overwrite({}, this.serverContext.config.formidable, this.config.formidable, config);
-            var _webRoot = _formidable.webRoot || this.serverContext.webRoot;
-            if(!_webRoot){
-                _webRoot = _formidable.root || this.serverContext.root;
-            }
-
-            if(!node_path.isAbsolute(_formidable.uploadDir) && _webRoot){
-                _formidable.uploadDir = node_path.join(_webRoot, _formidable.uploadDir);
-            }
-            if(!node_path.isAbsolute(_formidable.savedDir) && _webRoot){
-                _formidable.savedDir = node_path.join(_webRoot, _formidable.savedDir);
-            }
-            
-            this.__initPath(_formidable.uploadDir);
-            this.__initPath(_formidable.savedDir);
-
-            return _formidable;
         },
         __loadMiddlewares: function (paths){
             if(paths){

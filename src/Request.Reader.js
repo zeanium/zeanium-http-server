@@ -198,12 +198,12 @@ module.exports = zn.Class({
         },
         __parseFormData: function (clientRequest, callback){
             var _incomingForm = new formidable.IncomingForm();
-            zn.extend(_incomingForm, this.application.formidable);
-
+            zn.extend(_incomingForm, this.application ? this.application.formidable : this.serverContext.formidable);
+            
             return _incomingForm.parse(clientRequest, callback), _incomingForm;
         },
         uploadFile: function (file, config){
-            var _config = this.application.__initFileUploadConfig(config),
+            var _config = this._serverContext.__initFileUploadConfig(config),
                 _tempName = file.path.substring(file.path.lastIndexOf(node_path.sep) + 1);
                 _ext = node_path.extname(file.name),
                 _name = _tempName + _ext;

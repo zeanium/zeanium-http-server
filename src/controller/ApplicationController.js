@@ -1,35 +1,57 @@
 module.exports = zn.Controller('__$__', {
     Service: require('./ApplicationControllerService.js'),
     methods: {
+        info: {
+            method: 'GET/POST',
+            value: function (request, response, application, context, router){
+                response.success({
+                    config: application._config,
+                    package: require(application._config.root + "package.json")
+                });
+            }
+        },
+        package: {
+            method: 'GET/POST',
+            value: function (request, response, application, context, router){
+                response.success(require(application._config.root + "package.json"));
+            }
+        },
+        config: {
+            method: 'GET/POST',
+            value: function (request, response, application, context, router){
+                response.success(application._config);
+            }
+        },
         apis: {
             method: 'GET/POST',
             value: function (request, response, application, context, router){
-                var _routers = application._routers,
-                    _router = null,
-                    _data = [],
-                    _meta = {};
-                for(var key in _routers){
-                    _router = _routers[key];
-                    _meta = { router: key };
-                    zn.extend(_meta, _router.handler.meta);
-                    _data.push(_meta);
+                var _routes = application._routes,
+                    _data = [];
+                for(var route of _routes){
+                    _data.push({
+                        action: route.action,
+                        method: route.handler.meta.method,
+                        validate: route.validate,
+                        path: route.path,
+                        deploy: route.meta.deploy,
+                        controller: route.meta.controller
+                    });
                 }
                 response.success(_data);
             }
         },
-        routers: {
+        routes: {
             method: 'GET/POST',
             value: function (request, response, application, context, router){
-                response.success(Object.keys(application._routers));
+                var _routes = application._routes,
+                    _data = [];
+                for(var route of _routes){
+                    _data.push(route.path);
+                }
+                response.success(_data);
             }
         },
-        plugins: {
-            method: 'GET/POST',
-            value: function (request, response, application, context, router){
-                response.success(Object.keys(context.apps));
-            }
-        },
-        uploadFiles: {
+        uploads: {
             method: 'POST',
             value: function (request, response, application, context, router){
                 var _files = request.$files, _result = [];
