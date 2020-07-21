@@ -64,8 +64,8 @@ module.exports = zn.Class({
                     return _controller[_action].apply(_controller, _argv);
                 }
 
-                if(_validate === true && request.hasSession()){
-                    return _controller[_action].apply(_controller, _argv);
+                if(_validate === true){
+                    return request.sessionVerify(()=>_controller[_action].apply(_controller, _argv), (err)=>this.doHttpError(request.clientRequest, response.serverResponse, err));
                 }
 
                 if(typeof _validate == 'function' && _validate.call(_controller, request, response, _route) !== false){

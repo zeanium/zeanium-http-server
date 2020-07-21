@@ -54,10 +54,9 @@ module.exports = zn.Class({
                 }
             });
         },
-        sessionVerify: function (){
-            var _session = this.getSession();
-            if(_session) {
-                var _cookies = Array.from(_session._cookies || []);
+        sessionVerify: function (success, error){
+            this.getSession(null, function (session){
+                var _cookies = Array.from(session._cookies || []);
                 var _cookie = this._clientRequest.headers.cookie || this._clientRequest.headers.Cookie||'',
                     _ary = null;
                 for(var item of _cookie.split(';')){
@@ -69,44 +68,50 @@ module.exports = zn.Class({
                     }
                 }
                 if(_cookies.length){
-                    return false;
+                    error && error(new zn.ERROR.HttpRequestError({
+                        code: 403,
+                        message: "Session Verify Error.",
+                        detail: "Session Verify Error, You Need Relogin."
+                    }));
                 }else{
-                    return true;
+                    success && success();
                 }
-            }
+            }.bind(this), function (){
+                error && error(new zn.ERROR.HttpRequestError({
+                    code: 401,
+                    message: "Unauthorized.",
+                    detail: "Unauthorized, You Need Login First."
+                }));
+            });
 
-            return false;
+            return this;
         },
-        hasSession: function (){
-            return !!this.getSession();
+        hasSession: function (success, error){
+            return this.getSession(null, success, error), this;
         },
         hasSessionCookie: function (){
-            var _context = this._serverContext._sessionContext,
-                _config = _context.config;
-            return !!this.getCookie(_config.name);
+            return !!this.getCookie(this._serverContext._sessionContext.getSessionKey());
         },
         getSessionConfig: function (){
             return this._serverContext._sessionContext.config;
         },
-        createSession: function (values){
-            return this._serverContext._sessionContext.createSession(values);
-        },
-        getSession: function (values){
-            var _context = this._serverContext._sessionContext,
-                _session = null;
-
+        getSession: function (props, success, error){
+            var _context = this._serverContext._sessionContext;
             var _cookie = this.getCookie(_context.getSessionKey());
             if(_cookie){
-                _session = _context.getSession(_cookie.getValue());
-                if(_session){
-                    _session.setData(values);
-                    return _session;
-                }
+                _context.getSession(_cookie.getValue(), function (session){
+                    if(session && props) {
+                        session.setProps(props);
+                    }
+                    success && success(session);
+                }, error);
+            }else if(props){
+                _context.createSession(props, success, error);
+            }else{
+                error && error();
             }
 
-            if(values){
-                return _context.createSession(values);
-            }
+            return this;
         },
         getHeaders: function (){
             return this._clientRequest.headers;

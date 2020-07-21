@@ -18,15 +18,28 @@ var SessionContext = zn.Class({
                 this._serverContext = serverContext;
             }
         },
-        attachToServerContext: function (serverContext){
+        getSessionKey: function (){
+            var _key = this._config.name;
+            if(!_key) {
+                _key = this.constructor.getMeta('sessionKey');
+            }
+
+            return _key;
+        },
+        setServerContext: function (serverContext){
             return this._serverContext = serverContext, this;
+        },
+        setConfig: function (config){
+            return this._config = config, this;
         },
         jwtSign: function (data, expiresIn, secret){
             var _secret = secret || this._config.secret || 'zeanium',
                 _expires = expiresIn || this._config.expires || 60 * 30;
             return node_jwt.sign({
                 data: data
-            }, _secret, { expiresIn: _expires });
+            }, _secret, { 
+                expiresIn: _expires 
+            });
         },
         jwtVerifyToken: function (token, secret){
             return node_jwt.verify(token, secret || this._config.secret || 'zeanium');
@@ -49,13 +62,14 @@ var SessionContext = zn.Class({
 
             return _token;
         },
-        getSessionKey: function (){
-            var _key = this._config.name;
-            if(!_key) {
-                _key = this.constructor.getMeta('sessionKey');
-            }
-
-            return _key;
+        newSession: function (){
+            return this._current = new Session(this), this._current;
+        },
+        createSession: function (props, callback){
+            var _session = this.newSession();
+            _session.setProps(props);
+            _session.initialize();
+            return callback && callback(_session), _session;
         },
         getIds: function (){
             throw new Error("The Method Has's Implement.");
@@ -63,19 +77,31 @@ var SessionContext = zn.Class({
         getSession: function (sessionId){
             throw new Error("The Method Has's Implement.");
         },
-        createSession: function (){
-            throw new Error("The Method Has's Implement.");
-        },
         removeSession: function (sessionId){
             throw new Error("The Method Has's Implement.");
         },
-        updateSession: function (sessionId){
-            throw new Error("The Method Has's Implement.");
+        updateSessionId: function (sessionId, success, error){
+            this.getSession(sessionId, function (session){
+                session.updateId();
+                session.save();
+                success && success(session);
+            }, error);
+
+            return this;
+        },
+        updateSessionExpiresTime: function (sessionId, success, error){
+            this.getSession(sessionId, function (session){
+                session.updateExpiresTime();
+                session.save();
+                success && success(session);
+            }, error);
+
+            return this;
         },
         validateSession: function (sessionId){
             throw new Error("The Method Has's Implement.");
         },
-        cleanUp: function (){
+        saveSession: function (){
             throw new Error("The Method Has's Implement.");
         },
         empty: function (){
@@ -83,9 +109,6 @@ var SessionContext = zn.Class({
         },
         size: function (){
             throw new Error("The Method Has's Implement.");
-        },
-        __newSession: function (values){
-            return this._current = new Session(this, values), this._current;
         }
     }
 });

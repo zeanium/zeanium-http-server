@@ -23,16 +23,31 @@ module.exports = zn.Class({
                 request.clearFiles();
             });
         },
-        createSession: function (values, options){
-            var _session = this._request.getSession(values);
-            this.createCookie(this._request.getSessionConfig().name, _session.getId(), options);
-            return _session;
+        createSession: function (props, cookies, success, error){
+            return this._request.getSession(props, function (session){
+                var _sessionKey = this._request._serverContext._sessionContext.getSessionKey();
+                session.bindCookie(_sessionKey);
+                this.createCookie(_sessionKey, session.getId());
+                if(zn.is(cookies, 'object')){
+                    for(var key in cookies){
+                        session.bindCookie(key);
+                        this.createCookie(key, cookies[key]);
+                    }
+                }else if(zn.is(cookies, 'array')){
+                    for(var cookie of cookies){
+                        session.bindCookie(cookie.name);
+                        this.createCookie(cookie.name, cookie.value, cookie);
+                    }
+                }
+
+                session.save();
+                success && success(session);
+            }.bind(this), error), this;
         },
-        invalidateSession: function (){
-            var _session = this._request.getSession();
-            if(_session) {
-                _session.invalidate();
-                var _cookies = _session._cookies;
+        invalidateSession: function (success, error){
+            return this._request.getSession(function (session){
+                session.invalidate();
+                var _cookies = session._cookies;
                 var _cookie = this._request._clientRequest.headers.cookie || this._request._clientRequest.headers.Cookie||'',
                     _ary = null;
                 for(var item of _cookie.split(';')){
@@ -43,19 +58,19 @@ module.exports = zn.Class({
                         }
                     }
                 }
-            }
 
-            return this;
+                success && success(session);
+            }.bind(this), error), this;
         },
         createCookie: function (name, value, options){
-            var _config = this._request.getSessionConfig().cookie;
-            var _cookie = new Cookie(name, value, zn.overwrite(options, _config));
+            var _cookie = new Cookie(name, value, zn.overwrite(options, this._request.getSessionConfig().cookie));
+
             return this._cookies.push(_cookie), _cookie;
         },
         removeCookie: function (name){
             var _cookie = this._request._clientRequest.headers.cookie || this._request._clientRequest.headers.Cookie || '',
                 _ary = null;
-            _cookie.split(';').forEach(function (item, index){
+            _cookie.split(';').forEach(function (item){
                 if(item.trim()){
                     _ary = item.trim().split('=');
                     if(_ary[0].trim() == name) {

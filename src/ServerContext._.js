@@ -65,7 +65,7 @@ module.exports = zn.Class({
         },
         registerSessionContext: function (sessionContext){
             if(sessionContext) {
-                sessionContext.attachToServerContext(this);
+                sessionContext.setServerContext(this);
             }
 
             return this._sessionContext = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "registerSessionContext", [sessionContext, this]) || sessionContext, this;

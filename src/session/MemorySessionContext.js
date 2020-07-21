@@ -1,52 +1,11 @@
 /**
  * Created by yangyxu on 7/14/15.
  */
-module.exports = zn.SessionContext({
+module.exports = zn.SessionContext('ZNSESSIONID_MEMORY', {
     methods: {
         init: function (config, serverContext){
             this._sessions = {};
             this.super(config, serverContext);
-        },
-        createSession: function (values){
-            var _session = this.__newSession(values);
-            this._sessions[_session.getId()] = _session;
-            return _session;
-        },
-        getIds: function (){
-            return Object.keys(this._sessions);
-        },
-        getSession: function (sessionId){
-            this.cleanUp();
-            var _session = this._sessions[sessionId];
-            if(_session){
-                _session.updateExpiresTime();
-            }
-
-            return _session;
-        },
-        removeSession: function (sessionId){
-            var _session = this._sessions[sessionId];
-            if(_session){
-                this._sessions[sessionId] = null;
-                delete this._sessions[sessionId];
-            }
-            return _session;
-        },
-        updateSessionId: function (sessionId){
-            var _session = this.getSession(sessionId);
-            if(_session){
-                _session.updateId();
-            }
-
-            return _session;
-        },
-        updateSessionExpiresTime: function (sessionId){
-            var _session = this.getSession(sessionId);
-            if(_session){
-                _session.updateExpiresTime();
-            }
-
-            return _session;
         },
         cleanUp: function (){
             var _sessions = this._sessions,
@@ -59,12 +18,42 @@ module.exports = zn.SessionContext({
                     delete this._sessions[_session._id];
                 }
             }
+
+            return this;
+        },
+        getIds: function (success, error){
+            return success && success(Object.keys(this._sessions)), this;
+        },
+        getSession: function (sessionId, success, error){
+            this.cleanUp();
+            var _session = this._sessions[sessionId];
+            if(_session){
+                _session.updateExpiresTime();
+                _session.save();
+                success && success(_session);
+            }else{
+                error && error(null);
+            }
+
+            return this;
+        },
+        removeSession: function (sessionId){
+            var _session = this._sessions[sessionId];
+            if(_session){
+                this._sessions[sessionId] = null;
+                delete this._sessions[sessionId];
+            }
+
+            return this;
+        },
+        saveSession: function (session){
+            return this._sessions[session.getId()] = session, this;
         },
         empty: function (){
-            this._sessions = {};
+            return this._sessions = {}, this;
         },
-        size: function (){
-            Object.keys(this._sessions).length;
+        size: function (success, error){
+            return success && success(Object.keys(this._sessions).length), this;
         }
     }
 });

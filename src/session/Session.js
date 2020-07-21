@@ -1,18 +1,6 @@
 /**
  * Created by yangyxu on 7/14/15.
  */
-var __deepCopy = function (source, target){
-    for(var key in source){
-        if(zn.is(source[key], 'plain')){
-            target[key] = __deepCopy(source[key], target[key]);
-        } else {
-            if(source[key] !== undefined){
-                target[key] = source[key];
-            }
-        }
-    }
-    return target
-}
 module.exports = zn.Class({
     properties: {
         id: null,
@@ -23,27 +11,50 @@ module.exports = zn.Class({
         values: null,
         attributes: null,
         cookies: null,
-        interval: null,
+        interval: 30 * 1000,
         context: null
     },
     methods: {
-        init: function (context, values){
-            this._context = context;
-            this.sets(zn.overwrite(values, {
-                values: {},
-                attributes: {},
-                interval: 30 * 1000
-            }));
-
-            this._id = this.generateId();
+        init: function (context){
+            this._values = {};
+            this._attributes = {};
             this._cookies = [];
-            this._isNew = true;
-            this._createdTime = (new Date()).getTime();
-            this._expiresTime = this._createdTime + ((context.config.expires || 1800 )*1000);
+            this._context = context;
             if(context){
                 this._cookies.push(context.getSessionKey());
             }
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "initial", [context, values, this]);
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "initial", [context, this]);
+        },
+        initialize: function (){
+            this._id = this.generateId();
+            this._isNew = true;
+            this._createdTime = (new Date()).getTime();
+            this._expiresTime = this._createdTime + ((this._context.config.expires || 1800 ) * 1000);
+        },
+        save: function (){
+            return this._context.saveSession(this), this;
+        },
+        setSessionContext: function(context){
+            return this._context = context;
+        },
+        getSessionContext: function(){
+            return this._context;
+        },
+        setProps: function (props){
+            this.sets(props);
+        },
+        getProps: function (){
+            return {
+                id: this._id,
+                isNew: this._isNew,
+                cookies: this._cookies,
+                createdTime: this._createdTime,
+                expiresTime: this._expiresTime,
+                lastAccessedTime: this._lastAccessedTime,
+                values: this._values,
+                attributes: this._attributes,
+                interval: this._interval,
+            };
         },
         bindCookie: function (name){
             if(!this._isNew) return this;
@@ -57,43 +68,6 @@ module.exports = zn.Class({
             if(!this._isNew) return this;
             if(this._cookies.indexOf(name) != -1){
                 this._cookies = this._cookies.filter((cookie)=>!cookie==name);
-            }
-
-            return this;
-        },
-        getData: function (){
-            var _data = this.gets();
-            _data.context = null;
-            delete _data.context;
-            return _data;
-        },
-        isNew: function (){
-            return this._isNew;
-        },
-        serialize: function (){
-            var _value = JSON.stringify({
-                id: this._id,
-                isNew: this._isNew,
-                createdTime: this._createdTime,
-                expiresTime: this._expiresTime,
-                lastAccessedTime: this._lastAccessedTime,
-                values: this._values,
-                attributes: this._attributes,
-                interval: this._interval,
-            });
-            return zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "serialize", [_value, this]) || _value;
-        },
-        setData: function (data){
-            for(var key in data){
-                if(this['_' + key] === undefined){
-                    this['_' + key] = data[key];
-                }else{
-                    if(zn.is(this['_' + key], 'plain') && zn.is(data[key], 'plain')){
-                        this['_' + key] = __deepCopy(data[key], this['_' + key]);
-                    } else {
-                        this['_' + key] = data[key];
-                    }
-                }
             }
 
             return this;
@@ -126,12 +100,9 @@ module.exports = zn.Class({
         getValues: function (){
             return this._values;
         },
-        flush: function (){
-
-        },
         removeValue: function (name){
             this._values[name] = null;
-            delete this._values;
+            delete this._values[name];
             return this;
         },
         setAttribute: function (name, value) {
@@ -167,9 +138,6 @@ module.exports = zn.Class({
         getMaxInactiveInterval: function (){
             return this._interval;
         },
-        getSessionContext: function(){
-            return this._context;
-        },
         generateId: function (){
             var _token = this._context.sign();
             zn.trace('Session Token: ', _token);
@@ -178,7 +146,7 @@ module.exports = zn.Class({
         updateId: function (){
             var _id = this.generateId();
             this._isNew = false;
-            this._lastAccessedTime = new Date();
+            this._lastAccessedTime = (new Date()).getTime();
             this._id = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "updateId", [_id, this]) || _id;
 
             return this._id;
@@ -195,6 +163,13 @@ module.exports = zn.Class({
             this._expiresTime = (new Date()).getTime() - 1;
             this._context.removeSession(this._id);
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "invalidate", [this]);
+        },
+        isNew: function (){
+            return this._isNew;
+        },
+        serialize: function (){
+            var _value = JSON.stringify(this.getProps());
+            return zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "serialize", [_value, this]) || _value;
         },
         destory: function (){
             this.invalidate();
