@@ -35,6 +35,12 @@ module.exports = zn.Class({
             zn.info("Application[ ", config.deploy, " ] Loaded.");
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "loaded", [this, config, serverContext]);
         },
+        existPath: function (path){
+            return node_fs.existsSync(node_path.join(this._webRoot, path));
+        },
+        resolvePath: function (path){
+            return node_path.join(this._webRoot, path);
+        },
         resolveModel: function (modelName){
             return this._models[modelName] || this._models[config.deploy + '.' + modelName];
         },

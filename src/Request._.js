@@ -20,12 +20,13 @@ module.exports = zn.Class({
             this.__initCookie();
         },
         getContextPath: function (){
-
+            return this._serverContext._webRoot;
         },
         addClientRequestEventListener: function (event, listener, handler){
             return this._clientRequest.on.call(handler || this._clientRequest, event, listener), this;
         },
         getCookie: function (name){
+            if(!name) return;
             for(var i = 0, _len = this._cookies.length;  i < _len; i++){
                 if(this._cookies[i].name == name){
                     return this._cookies[i];
@@ -53,6 +54,29 @@ module.exports = zn.Class({
                 }
             });
         },
+        sessionVerify: function (){
+            var _session = this.getSession();
+            if(_session) {
+                var _cookies = Array.from(_session._cookies || []);
+                var _cookie = this._clientRequest.headers.cookie || this._clientRequest.headers.Cookie||'',
+                    _ary = null;
+                for(var item of _cookie.split(';')){
+                    if(item.trim()){
+                        _ary = item.trim().split('=');
+                        if(_cookies.indexOf(_ary[0].trim()) != -1){
+                            _cookies.splice(_cookies.indexOf(_ary[0].trim()), 1);
+                        }
+                    }
+                }
+                if(_cookies.length){
+                    return false;
+                }else{
+                    return true;
+                }
+            }
+
+            return false;
+        },
         hasSession: function (){
             return !!this.getSession();
         },
@@ -69,10 +93,9 @@ module.exports = zn.Class({
         },
         getSession: function (values){
             var _context = this._serverContext._sessionContext,
-                _config = _context.config,
                 _session = null;
 
-            var _cookie = this.getCookie(_config.name);
+            var _cookie = this.getCookie(_context.getSessionKey());
             if(_cookie){
                 _session = _context.getSession(_cookie.getValue());
                 if(_session){
@@ -87,6 +110,11 @@ module.exports = zn.Class({
         },
         getHeaders: function (){
             return this._clientRequest.headers;
+        },
+        getClientIp: function (){
+            if (this._clientRequest) {
+                return this._serverContext.getClientIp(this._clientRequest);
+            }
         },
         __parseCookie: function (cookie){
             var _data = {},

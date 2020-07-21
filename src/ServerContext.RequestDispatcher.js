@@ -23,6 +23,7 @@ module.exports = zn.Class({
             serverResponse.currentTimestamp = (new Date()).getTime();
             var _timestamp = serverResponse.currentTimestamp - clientRequest.currentTimestamp,
                 _code = serverResponse.statusCode,
+                _clientIp = this.getClientIp(clientRequest),
                 _nowString = zn.date.asString(new Date());
             this._logger.requestStatus(clientRequest.url, {
                 method: clientRequest.method,
@@ -31,12 +32,12 @@ module.exports = zn.Class({
                 time: _nowString,
                 timestamp: _timestamp + 'ms'
             });
-            this._logger.writeRequest(_nowString, '[', clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
+            this._logger.writeRequest(_nowString, '[', _clientIp, clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
             if(_code > 199 && _code < 300){
-                zn.debug('[', clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
+                zn.debug('[', _clientIp, clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
             }else{
                 this._logger.writeError(_nowString, '[', clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
-                zn.error('[', clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
+                zn.error('[', _clientIp, clientRequest.method, _code, _timestamp + 'ms', ']', clientRequest.url);
             }
 
             this.execMiddleware("responseClose", clientRequest, serverResponse);
@@ -46,7 +47,7 @@ module.exports = zn.Class({
             this.doHttpError(clientRequest, serverResponse, new zn.ERROR.HttpResponseError({
                 code: 408,
                 message: "Request Timeout.",
-                detail: "408 Request Timeout"
+                detail: "Request Timeout"
             }));
         },
         __doFinished: function (clientRequest, serverResponse){
@@ -87,6 +88,12 @@ module.exports = zn.Class({
             } catch (error) {
                 this.doHttpError(clientRequest, serverResponse, error);
             }
+        },
+        existPath: function (path){
+            return node_fs.existsSync(node_path.join(this._webRoot, path));
+        },
+        resolvePath: function (path){
+            return node_path.join(this._webRoot, path);
         },
         doRequest: function (clientRequest, serverResponse){
             var _return = this.execMiddleware("doRequest", clientRequest, serverResponse);

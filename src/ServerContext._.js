@@ -63,6 +63,13 @@ module.exports = zn.Class({
             this._apps[application.config.deploy] = application;
             return this._routes = this._routes.concat(application.routes), this;
         },
+        registerSessionContext: function (sessionContext){
+            if(sessionContext) {
+                sessionContext.attachToServerContext(this);
+            }
+
+            return this._sessionContext = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "registerSessionContext", [sessionContext, this]) || sessionContext, this;
+        },
         __initial: function (config){
             this._apps = {};
             this._routes = [];
@@ -70,8 +77,13 @@ module.exports = zn.Class({
         },
         __initSessionContext: function (){
             var _config = this._config.session,
-                _Context = _config.Context || MemorySessionContext;
-            this._sessionContext = new _Context(_config, this);
+                _context = null;
+            if(_config){
+                var _Context = _config.context || MemorySessionContext;
+                _context = new _Context(_config, this);
+            }
+
+            this.registerSessionContext(_context);
         },
         __loadingCompleted: function (){
             var _timestamp = (new Date()).getTime() - this._server._beginTimestamp,
@@ -185,6 +197,101 @@ module.exports = zn.Class({
             this.__initPath(_formidable.savedDir);
 
             return _formidable;
+        },
+        getClientIp: function (clientRequest){
+            var _clientRequest = clientRequest;
+            if (!_clientRequest) {
+                return null;
+            }
+            if (_clientRequest.headers) {
+                if (_clientRequest.headers['x-client-ip']) {
+                    return _clientRequest.headers['x-client-ip'];
+                }
+
+                var xForwardedFor = this.getClientIpFromXForwardedFor(_clientRequest.headers['x-forwarded-for']);
+                if (xForwardedFor) {
+                    return xForwardedFor;
+                }
+
+                if (_clientRequest.headers['cf-connecting-ip']) {
+                    return _clientRequest.headers['cf-connecting-ip'];
+                }
+
+                if (_clientRequest.headers['fastly-client-ip']) {
+                    return _clientRequest.headers['fastly-client-ip'];
+                }
+
+                if (_clientRequest.headers['true-client-ip']) {
+                    return _clientRequest.headers['true-client-ip'];
+                }
+
+                if (_clientRequest.headers['x-real-ip']) {
+                    return _clientRequest.headers['x-real-ip'];
+                }
+
+                if (_clientRequest.headers['x-cluster-client-ip']) {
+                    return _clientRequest.headers['x-cluster-client-ip'];
+                }
+
+                if (_clientRequest.headers['x-forwarded']) {
+                    return _clientRequest.headers['x-forwarded'];
+                }
+
+                if (_clientRequest.headers['forwarded-for']) {
+                    return _clientRequest.headers['forwarded-for'];
+                }
+
+                if (_clientRequest.headers.forwarded) {
+                    return _clientRequest.headers.forwarded;
+                }
+            }
+
+            if (_clientRequest.connection) {
+                if (_clientRequest.connection.remoteAddress) {
+                    return _clientRequest.connection.remoteAddress;
+                }
+                if (_clientRequest.connection.socket && _clientRequest.connection.socket.remoteAddress) {
+                    return _clientRequest.connection.socket.remoteAddress;
+                }
+            }
+
+            if (_clientRequest.socket && _clientRequest.socket.remoteAddress) {
+                return _clientRequest.socket.remoteAddress;
+            }
+
+            if (_clientRequest.info && _clientRequest.info.remoteAddress) {
+                return _clientRequest.info.remoteAddress;
+            }
+
+            if (_clientRequest.requestContext && _clientRequest.requestContext.identity && _clientRequest.requestContext.identity.sourceIp) {
+                return _clientRequest.requestContext.identity.sourceIp;
+            }
+
+            return null;
+        },
+        getClientIpFromXForwardedFor: function (value){
+            if (!value) {
+                return null;
+            }
+        
+            if (typeof value != 'string') {
+                throw new TypeError(`Expected a string, got "${typeof value}"`);
+            }
+
+            var _values = value.split(',');
+            for(var ip of _values){
+                ip = ip.trim();
+                if(ip.includes(':')) {
+                    var splitted = ip.split(':');
+                    if (splitted.length === 2) {
+                        return splitted[0];
+                    }
+                }
+
+                if(ip){
+                    return ip;
+                }
+            }
         }
     }
 });

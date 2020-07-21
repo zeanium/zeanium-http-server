@@ -8,6 +8,9 @@ var CookieMiddleware = zn.Middleware({
         },
         serialize: function (props, cookie){
             
+        },
+        serialized: function (pairs, props, cookie){
+            
         }
     }
 });

@@ -32,9 +32,17 @@ module.exports = zn.Class({
             var _session = this._request.getSession();
             if(_session) {
                 _session.invalidate();
-                this._cookies.push(new Cookie(this._request.getSessionConfig().name, '----', {
-                    expires: -1
-                }));
+                var _cookies = _session._cookies;
+                var _cookie = this._request._clientRequest.headers.cookie || this._request._clientRequest.headers.Cookie||'',
+                    _ary = null;
+                for(var item of _cookie.split(';')){
+                    if(item.trim()){
+                        _ary = item.trim().split('=');
+                        if(_cookies.indexOf(_ary[0].trim())!=-1){
+                            this._cookies.push(new Cookie(_ary[0].trim(), '-', { expires: -1 }));
+                        }
+                    }
+                }
             }
 
             return this;
@@ -44,9 +52,41 @@ module.exports = zn.Class({
             var _cookie = new Cookie(name, value, zn.overwrite(options, _config));
             return this._cookies.push(_cookie), _cookie;
         },
+        removeCookie: function (name){
+            var _cookie = this._request._clientRequest.headers.cookie || this._request._clientRequest.headers.Cookie || '',
+                _ary = null;
+            _cookie.split(';').forEach(function (item, index){
+                if(item.trim()){
+                    _ary = item.trim().split('=');
+                    if(_ary[0].trim() == name) {
+                        this._cookies.push(new Cookie(_ary[0].trim(), '-', { expires: -1 }));
+                    }
+                }
+            }.bind(this));
+
+            return this;
+        },
+        clearCookie: function (){
+            var _cookie = this._request._clientRequest.headers.cookie || this._request._clientRequest.headers.Cookie || '',
+                _ary = null;
+            _cookie.split(';').forEach(function (item, index){
+                if(item.trim()){
+                    _ary = item.trim().split('=');
+                    this._cookies.push(new Cookie(_ary[0].trim(), '-', { expires: -1 }));
+                }
+            }.bind(this));
+
+            return this;
+        },
         addCookie: function (cookie){
             if(cookie instanceof Cookie){
                 this._cookies.push(cookie);
+            }else if(typeof cookie == 'object'){
+                this._cookies.push(new Cookie(cookie.name, cookie.value, cookie));
+            }
+
+            if(arguments.length > 1) {
+                this._cookies.push(new Cookie(arguments[0], arguments[1], arguments[3]));
             }
             
             return this;

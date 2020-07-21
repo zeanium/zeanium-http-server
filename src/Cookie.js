@@ -11,6 +11,7 @@ module.exports = zn.Class({
         httpOnly: true,
         secure: false,
         sameSite: null,
+        priority: 'Medium',
         comment: null,
         data: null
     },
@@ -20,12 +21,6 @@ module.exports = zn.Class({
             this._value = value;
             this.sets(options);
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.COOKIE, "initial", [name, value, options, this]);
-        },
-        setData: function (data){
-            return this._data = data, this;
-        },
-        getData: function (){
-            return this._data;
         },
         setName: function (name){
             return this._name = name, this;
@@ -87,11 +82,23 @@ module.exports = zn.Class({
         getSameSite: function (){
             return this._sameSite;
         },
+        setPriority: function (priority){
+            return this._priority = priority, this;
+        },
+        getPriority: function (){
+            return this._priority;
+        },
         setComment: function (comment){
             return this._comment = comment, this;
         },
         getComment: function (){
             return this._comment;
+        },
+        setData: function (data){
+            return this._data = data, this;
+        },
+        getData: function (){
+            return this._data;
         },
         __getSameSite: function (sameSite){
             var _sameSite = typeof sameSite === 'string' ? sameSite.toLowerCase() : sameSite;
@@ -107,6 +114,10 @@ module.exports = zn.Class({
                 default:
                     return '';
             }
+        },
+        invalid: function (){
+            this._value = '';
+            this._expires = new Date(0);
         },
         serialize: function (){
             var _props = this.gets();
@@ -130,9 +141,10 @@ module.exports = zn.Class({
             if (_props.httpOnly) _pairs.push('HttpOnly');
             if (_props.secure) _pairs.push('Secure');
             if (_props.sameSite) _pairs.push(this.__getSameSite(_props.sameSite));
+            if (_props.priority) _pairs.push('Priority=' + _props.priority);
             if (_props.comment) _pairs.push('Comment=' + _props.comment);
 
-            return _pairs.join('; ');
+            return zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.COOKIE, "serialized", [_pairs, _props, this]) || _pairs.join('; ');
         }
     }
 });

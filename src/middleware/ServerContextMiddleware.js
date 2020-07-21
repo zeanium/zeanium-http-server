@@ -3,6 +3,9 @@ var ServerContextMiddleware = zn.Middleware({
         init: function (argv){
             this.super(argv);
         },
+        initSessionContexts: function (sessionContexts, configs, context){
+
+        },
         fileChanged: function (){
             
         },

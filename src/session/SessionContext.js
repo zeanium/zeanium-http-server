@@ -1,6 +1,8 @@
 /**
  * Created by yangyxu on 7/14/15.
  */
+var node_crypto = require('crypto');
+var node_jwt = require('jsonwebtoken');
 var Session = require('./Session');
 var SessionContext = zn.Class({
     properties: {
@@ -16,6 +18,45 @@ var SessionContext = zn.Class({
                 this._serverContext = serverContext;
             }
         },
+        attachToServerContext: function (serverContext){
+            return this._serverContext = serverContext, this;
+        },
+        jwtSign: function (data, expiresIn, secret){
+            var _secret = secret || this._config.secret || 'zeanium',
+                _expires = expiresIn || this._config.expires || 60 * 30;
+            return node_jwt.sign({
+                data: data
+            }, _secret, { expiresIn: _expires });
+        },
+        jwtVerifyToken: function (token, secret){
+            return node_jwt.verify(token, secret || this._config.secret || 'zeanium');
+        },
+        cryptoSign: function (data, secret){
+            var _secret = secret || this._config.secret || 'zeanium',
+                _currDate = (new Date()).valueOf().toString(),
+                _random = Math.random().toString();
+            return node_crypto.createHash('sha1').update(_currDate + _random + _secret + (typeof data == 'object' ? JSON.stringify(data) : data.toString())).digest('hex');
+        },
+        sign: function (data, expiresIn){
+            var _token = '',
+                _type = this._config.signature || 'jwt',
+                _data = data || this.getSessionKey();
+            if(_type=='crypto_hash'){
+                _token = this.cryptoSign(_data);
+            }else if(_type == 'jwt'){
+                _token = this.jwtSign(_data, expiresIn);
+            }
+
+            return _token;
+        },
+        getSessionKey: function (){
+            var _key = this._config.name;
+            if(!_key) {
+                _key = this.constructor.getMeta('sessionKey');
+            }
+
+            return _key;
+        },
         getIds: function (){
             throw new Error("The Method Has's Implement.");
         },
@@ -29,6 +70,9 @@ var SessionContext = zn.Class({
             throw new Error("The Method Has's Implement.");
         },
         updateSession: function (sessionId){
+            throw new Error("The Method Has's Implement.");
+        },
+        validateSession: function (sessionId){
             throw new Error("The Method Has's Implement.");
         },
         cleanUp: function (){
@@ -46,8 +90,19 @@ var SessionContext = zn.Class({
     }
 });
 
-zn.SessionContext = function (meta){
-    return zn.Class(SessionContext, meta);
+zn.SessionContext = function (){
+    var _args = arguments,
+        _meta = {};
+    if(_args.length == 1){
+        _meta = _args[0];
+    }
+
+    if(_args.length == 2){
+        _meta = _args[1] || {};
+        _meta.sessionKey = _args[0];
+    }
+
+    return zn.Class(SessionContext, _meta);
 }
 
 module.exports = SessionContext;

@@ -13,7 +13,6 @@ var __deepCopy = function (source, target){
     }
     return target
 }
-var node_crypto = require('crypto');
 module.exports = zn.Class({
     properties: {
         id: null,
@@ -23,6 +22,7 @@ module.exports = zn.Class({
         lastAccessedTime: null,
         values: null,
         attributes: null,
+        cookies: null,
         interval: null,
         context: null
     },
@@ -32,20 +32,56 @@ module.exports = zn.Class({
             this.sets(zn.overwrite(values, {
                 values: {},
                 attributes: {},
-                interval: 30*1000
+                interval: 30 * 1000
             }));
 
             this._id = this.generateId();
+            this._cookies = [];
             this._isNew = true;
-            this._createdTime = new Date();
-            this._expiresTime = this._createdTime.getTime() + ((context.config.timeout||0)*1000);
+            this._createdTime = (new Date()).getTime();
+            this._expiresTime = this._createdTime + ((context.config.expires || 1800 )*1000);
+            if(context){
+                this._cookies.push(context.getSessionKey());
+            }
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "initial", [context, values, this]);
+        },
+        bindCookie: function (name){
+            if(!this._isNew) return this;
+            if(this._cookies.indexOf(name) == -1){
+                this._cookies.push(name)
+            }
+
+            return this;
+        },
+        unbindCookie: function (name){
+            if(!this._isNew) return this;
+            if(this._cookies.indexOf(name) != -1){
+                this._cookies = this._cookies.filter((cookie)=>!cookie==name);
+            }
+
+            return this;
         },
         getData: function (){
             var _data = this.gets();
             _data.context = null;
             delete _data.context;
             return _data;
+        },
+        isNew: function (){
+            return this._isNew;
+        },
+        serialize: function (){
+            var _value = JSON.stringify({
+                id: this._id,
+                isNew: this._isNew,
+                createdTime: this._createdTime,
+                expiresTime: this._expiresTime,
+                lastAccessedTime: this._lastAccessedTime,
+                values: this._values,
+                attributes: this._attributes,
+                interval: this._interval,
+            });
+            return zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "serialize", [_value, this]) || _value;
         },
         setData: function (data){
             for(var key in data){
@@ -135,21 +171,21 @@ module.exports = zn.Class({
             return this._context;
         },
         generateId: function (){
-            var _currDate = (new Date()).valueOf().toString(),
-                _random = Math.random().toString(),
-                _id = node_crypto.createHash('sha1').update(_currDate + _random).digest('hex');
-            return zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "generateId", [_id, this]) || _id;
+            var _token = this._context.sign();
+            zn.trace('Session Token: ', _token);
+            return zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "generateId", [_token, this]) || _token;
         },
         updateId: function (){
             var _id = this.generateId();
             this._isNew = false;
             this._lastAccessedTime = new Date();
             this._id = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "updateId", [_id, this]) || _id;
+
             return this._id;
         },
         updateExpiresTime: function (){
-            var _date = new Date(),
-                _time = _date.getTime() + (this._context._config.timeout * 1000);
+            var _date = (new Date()).getTime(),
+                _time = _date + (this._context._config.timeout * 1000);
             this._isNew = false;
             this._lastAccessedTime = _date;
             this._expiresTime = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "updateExpiresTime", [_time, this]) || _time;

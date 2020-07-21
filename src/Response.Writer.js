@@ -20,6 +20,15 @@ module.exports = zn.Class({
         error: function (content, code, message){
             return this.JSONWrite(content, code || 500, message), this;
         },
+        jsonp: function (){
+
+        },
+        send: function (){
+
+        },
+        serverError: function (){
+
+        },
         JSONWrite: function (content, code, message){
             if(content instanceof Error) {
                 content = {
