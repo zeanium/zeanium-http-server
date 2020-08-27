@@ -85,7 +85,7 @@ module.exports = zn.Class({
             zn.error(err);
         },
         __onListening: function (){
-            zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "listening", Array.prototype.slice.call(arguments).concat([this]));
+            //zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "listening", Array.prototype.slice.call(arguments).concat([this]));
             zn.info('Listening in ', this._httpServer.address());
         },
         __onClose: function (){

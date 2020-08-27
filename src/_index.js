@@ -1,4 +1,5 @@
 module.exports = {
+    Middleware: require('./Middleware.js'),
     error: require('./error/_index.js'),
     config: require('./config/_index.js'),
     session: require('./session/_index.js'),
@@ -6,6 +7,5 @@ module.exports = {
     middleware: require('./middleware/_index.js'),
     Controller: require('./Controller.js'),
     ControllerService: require('./ControllerService.js'),
-    Middleware: require('./Middleware.js'),
     Server: require('./Server.js')
 }
