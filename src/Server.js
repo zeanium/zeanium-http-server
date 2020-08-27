@@ -26,7 +26,6 @@ module.exports = zn.Class({
     },
     methods: {
         init: function (args){
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER, "initial", [args, this]);
             var _config = zn.deepAssigns({}, CONFIG, args);
             this._config = _config;
             this.__init(_config);
@@ -35,6 +34,7 @@ module.exports = zn.Class({
                 this.start();
             }
             this.watching();
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER, "initial", [args, this]);
         },
         __init: function (_config){
             this._beginTimestamp = (new Date()).getTime();

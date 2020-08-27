@@ -25,7 +25,7 @@ module.exports = {
     },
     watcher: {
         watching: true,
-        cwd: '/',
+        cwd: '/src/',
         ignored: /[\/\\]\./,
         interval: 1000,
         deployDelayInterval: 3000,
@@ -36,14 +36,14 @@ module.exports = {
     formidable: {
         encoding: 'utf-8',
         keepExtensions: false,
-        uploadDir: './web/www/upload/temp',
-        savedDir: './web/www/upload/saved',
+        uploadDir: './',
+        savedDir: './',
         maxFieldsSize: 20 * 1024 * 1024,
         maxFileSize: 500 * 1024 * 1024,
         maxFields: 1000,
         multiples: true
     },
-    timeout: 20000,
+    timeout: 30000,
     cors: true,
     indexs: ['index.html', 'index.htm', 'default.html', 'default.htm'],
     session: {

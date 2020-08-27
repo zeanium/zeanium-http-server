@@ -9,6 +9,7 @@ var ServerContextRequestRouter = require('./ServerContext.RequestRouter.js');
 var MemorySessionContext = require('./session/MemorySessionContext');
 var PathMatcher = require('./PathMatcher');
 var Logger = require('./Logger');
+var PACKAGE = require("../package.json");
 
 module.exports = zn.Class({
     mixins: [ 
@@ -47,11 +48,12 @@ module.exports = zn.Class({
                 pathSeparator: config.pathSeparator,
                 pathParameterSymbol: config.pathParameterSymbol
             });
-            this._formidable = this.__initFileUploadConfig(),
+            this._formidable = this.__initFileUploadConfig();
             this.__initial(config);
             this.__initSessionContext();
             this.__deploy();
             this.__loadingCompleted();
+            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "initial", [config, server, this]);
         },
         resolveModel: function (modelName){
             return this._models[modelName];
@@ -165,7 +167,7 @@ module.exports = zn.Class({
             return _exports;
         },
         __initPath: function (path){
-            if(node_path.isAbsolute(path)){
+            if(!node_path.isAbsolute(path) || node_fs.existsSync(path)){
                 return path;
             }
             var _paths = path.split(node_path.sep),
@@ -179,11 +181,16 @@ module.exports = zn.Class({
                 }
             });
         },
+        getFileUploadConfig: function (config){
+            return this.__initFileUploadConfig(config);
+        },
         __initFileUploadConfig: function (config){
             var _formidable = zn.overwrite({}, this._config.formidable, config);
-            var _webRoot = _formidable.webRoot || this._webRoot;
-            if(!_webRoot){
-                _webRoot = _formidable.root || this._root;
+            var _webRoot = _formidable.webRoot || _formidable.root;
+            if(_webRoot){
+                _webRoot = node_path.resolve(process.cwd(), _webRoot);
+            }else{
+                _webRoot = this._webRoot || this._root;
             }
 
             if(!node_path.isAbsolute(_formidable.uploadDir) && _webRoot){
@@ -193,9 +200,10 @@ module.exports = zn.Class({
                 _formidable.savedDir = node_path.join(_webRoot, _formidable.savedDir);
             }
             
+            _formidable.webRoot = _webRoot;
             this.__initPath(_formidable.uploadDir);
             this.__initPath(_formidable.savedDir);
-
+            
             return _formidable;
         },
         getClientIp: function (clientRequest){
@@ -268,6 +276,28 @@ module.exports = zn.Class({
             }
 
             return null;
+        },
+        initHttpHeaderCommonSetting: function (clientRequest, serverResponse){
+            if(serverResponse.finished) return this;
+            var _headers = clientRequest.headers,
+                _origin = _headers.origin || _headers.host || _headers.Host,
+                _basic = zn.overwrite({
+                    'Access-Control-Allow-Origin': _origin,
+                    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
+                    'Access-Control-Allow-Headers': 'Accept,Accept-Charset,Accept-Encoding,Accept-Language,Connection,Content-Type,Cookie,DNT,Host,Keep-Alive,Origin,Referer,User-Agent,X-CSRF-Token,X-Requested-With',
+                    "Access-Control-Allow-Credentials": true,
+                    'Access-Control-Max-Age': '3600',
+                    'X-Powered-By': PACKAGE.name,
+                    'Server': PACKAGE.name,
+                    'Server-Version': PACKAGE.version,
+                    'Content-Type': (_headers["Content-Type"] || "application/json") + ';charset=' + (_headers["encoding"]||"utf-8")
+                }, this._config.cors);
+
+            for(var key in _basic){
+                serverResponse.setHeader(key, _basic[key]);
+            }
+
+            return this;
         },
         getClientIpFromXForwardedFor: function (value){
             if (!value) {

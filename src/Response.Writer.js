@@ -57,14 +57,14 @@ module.exports = zn.Class({
         },
         HTTPWrite: function (content, code, message){
             if(this._serverResponse.finished) return this;
-            this.setHeaders(this.getResponseHTTPHeaders());
+            this.setCommonHeaders();
             this.setStatus(code, VARS.HTTP_MESSAGE[code] || message);
             this.write(content);
             return this.end(), this;
         },
         HTTPSuccess: function (content, contentType, encoding){
             if(this._serverResponse.finished) return this;
-            this.setHeaders(this.getResponseHTTPHeaders());
+            this.setCommonHeaders();
             if(contentType){
                 this.setContentType(this.getContentType(contentType, encoding));
             }
@@ -74,7 +74,7 @@ module.exports = zn.Class({
         },
         HTTPError: function (code, detail, message, encoding){
             if(this._serverResponse.finished) return this;
-            this.setHeaders(this.getResponseHTTPHeaders());
+            this.setCommonHeaders();
             if(code){
                 var _error = ERRORS[code] | {};
                 message = message || VARS.HTTP_MESSAGE[code] || _error.msg;

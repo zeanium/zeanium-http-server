@@ -64,7 +64,7 @@ module.exports = zn.Class({
             }.bind(this));
             zn.extend(this._controllers,  this.__loadPackages(config.controllers));
             this._routes = this.__initRoutes(this._controllers);
-            this._formidable = this._serverContext.__initFileUploadConfig(this._config);
+            this._formidable = this._serverContext.__initFileUploadConfig(this._config.formidable);
 
             zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initial", [this, config, serverContext]);
         },

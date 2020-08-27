@@ -38,12 +38,8 @@ module.exports = zn.Class({
                 this._chain = _chain;
             }
 
-            if(this._$params !== _params) {
-                this._$params = _params || {};
-            }
-            if(this._$unmatchs !== _unmatchs) {
-                this._$unmatchs = _unmatchs || {};
-            }
+            this._$params = zn.extend(this._$params, _params || {});
+            this._$unmatchs = _unmatchs || [];
 
             return this;
         },
@@ -80,11 +76,7 @@ module.exports = zn.Class({
                     });
                 }
             }else {
-                throw new zn.ERROR.HttpRequestError({
-                    code: 400,
-                    message: "Data Type Error",
-                    detail: "Request parameter '" + inName + "' is '" + this.getValue(inName) + "' is not json data."
-                });
+                return {};
             }
         },
         getValue: function (inName) {
@@ -92,6 +84,13 @@ module.exports = zn.Class({
                 return this._$data[inName] || this._$params[inName];
             } else {
                 return zn.deepAssign({}, this._$data, this._$params);
+            }
+        },
+        getParameter: function (key){
+            if(key){
+                return this._$params[key];
+            } else {
+                return zn.deepAssign({}, this._$params);
             }
         },
         setValue: function (inKey, inValue){
@@ -103,11 +102,14 @@ module.exports = zn.Class({
         getBoolean: function (inName) {
             return new Boolean(this.getValue(inName)).valueOf();
         },
+        getFiles: function (name){
+            return name ? this._$files[name]: this._$files;
+        },
         validateRequestParameters: function (args){
             var _defaultValue = null,
                 _newValue = null,
                 _args = args || {},
-                _values = zn.extend({}, this._$get, this._$post);
+                _values = zn.extend({}, this._$get, this._$post, this._$params);
             for(var _key in _args){
                 _defaultValue = _args[_key];
                 _newValue = _values[_key];
@@ -197,35 +199,87 @@ module.exports = zn.Class({
             return this;
         },
         __parseFormData: function (clientRequest, callback){
-            var _incomingForm = new formidable.IncomingForm();
-            zn.extend(_incomingForm, this.application ? this.application.formidable : this.serverContext.formidable);
+            var _incomingForm = new formidable.IncomingForm(),
+                _config = zn.extend(this.application ? this.application.formidable : this.serverContext.formidable);
+            
+            zn.extend(_incomingForm, _config);
             
             return _incomingForm.parse(clientRequest, callback), _incomingForm;
         },
-        uploadFile: function (file, config){
-            var _config = this._serverContext.__initFileUploadConfig(config),
+        uploadFile: function (file, options){
+            if(zn.is(file, 'string')){
+                file = this._$files[file];
+            }
+            if(!file){
+                throw new zn.ERROR.HttpRequestError({
+                    code: 500,
+                    message: "uploadFile Error.",
+                    detail: "File Object is null."
+                });
+            }
+            
+            var _options = options || {},
+                _config = this._serverContext.__initFileUploadConfig(),
                 _tempName = file.path.substring(file.path.lastIndexOf(node_path.sep) + 1);
                 _ext = node_path.extname(file.name),
-                _name = _tempName + _ext;
-            if(_config.keepOriginName){
+                _name = _tempName,
+                _folder = _options.folder || '',
+                _savedDir = _config.savedDir;
+            if(_options.keepOriginName || _config.keepOriginName){
                 _name = file.name;
             }
-            var _savedPath = node_path.join(_config.savedDir, _name);
-            node_fs.renameSync(file.path, _savedPath);
-            return {
-                name: file.name,
-                type: file.type,
-                tempName: _tempName,
-                size: file.size,
-                savedName: _name,
-                savedPath: _savedPath,
-                lastModifiedDate: file.lastModifiedDate.toISOString()
+            if(_options.name) {
+                _name = _options.name;
             }
+            if(_options.prefix) {
+                _name = _options.prefix + _name;
+            }
+            if(_options.suffix) {
+                _name = _name + _options.suffix;
+            }
+            if(_options.path) {
+                var _path = _options.path;
+                if(_path.charAt(0) == '/') {
+                    _savedDir = _path;
+                }else if(_path.charAt(0) == '.'){
+                    _savedDir = node_path.resolve(_config.webRoot, _path);
+                }
+            }
+
+            if(_folder) {
+                _savedDir = node_path.join(_savedDir, _folder);
+                _folder = '/' + _folder;
+            }
+            this._serverContext.__initPath(_savedDir);
+            var _savedPath = node_path.join(_savedDir, _name + _ext),
+                _file = {
+                    name: file.name,
+                    type: file.type,
+                    tempName: _tempName,
+                    encoding: _config.encoding,
+                    ext: _ext,
+                    size: file.size,
+                    savedName: _name + _ext,
+                    savedDir: _config.savedDir,
+                    savedPath: _savedPath,
+                    path: _folder + '/' + _name + _ext,
+                    lastModifiedDate: file.lastModifiedDate.toISOString()
+                };
+
+            if(_options.return) {
+                zn.extend(_file, _options.return);
+            }
+
+            zn.debug('Upload File Saved: ', _savedPath);
+            return node_fs.renameSync(file.path, _savedPath), _file;
         },
-        uploadFiles: function (files, config){
-            var _files = [];
-            zn.each(files || this._$files, function (file){
-                _files.push(this.uploadFile(file, config));
+        uploadFiles: function (options, eachCallback){
+            var _files = [],
+                _obj = null;
+            zn.each(options.files || this._$files, function (file){
+                _obj = this.uploadFile(file, options);
+                _obj = (eachCallback && eachCallback(_obj, file)) || _obj;
+                _files.push(_obj);
             }, this);
 
             return _files;

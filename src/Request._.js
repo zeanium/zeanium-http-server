@@ -10,6 +10,7 @@ module.exports = zn.Class({
         application: null,
         clientRequest: null,
         serverContext: null,
+        session: null,
         cookies: null
     },
     methods: {
@@ -74,13 +75,14 @@ module.exports = zn.Class({
                         detail: "Session Verify Error, You Need Relogin."
                     }));
                 }else{
-                    success && success();
+                    this._session = session;
+                    success && success(session);
                 }
             }.bind(this), function (){
                 error && error(new zn.ERROR.HttpRequestError({
                     code: 401,
                     message: "Unauthorized.",
-                    detail: "Unauthorized, You Need Login First."
+                    detail: "Unauthorized, You Need Login Into System First."
                 }));
             });
 
@@ -103,10 +105,11 @@ module.exports = zn.Class({
                     if(session && props) {
                         session.setProps(props);
                     }
+                    this._session = session;
                     success && success(session);
-                }, error);
+                }.bind(this), error);
             }else if(props){
-                _context.createSession(props, success, error);
+                this._session = _context.createSession(props, success, error);
             }else{
                 error && error();
             }

@@ -162,6 +162,7 @@ module.exports = zn.Class({
                 flag: 'r'
             });
 
+            this.initHttpHeaderCommonSetting(clientRequest, serverResponse);
             serverResponse.setHeader('Content-Type', _mime.contentType + ";charset=" + _mime.encoding);
             serverResponse.setHeader('Content-Length', Buffer.byteLength(_content, _mime.encoding));
             serverResponse.writeHead(200, "OK");
@@ -186,6 +187,7 @@ module.exports = zn.Class({
         },
         doJSON: function (clientRequest, serverResponse, content){
             var _encoding = 'utf-8';
+            this.initHttpHeaderCommonSetting(clientRequest, serverResponse);
             serverResponse.setHeader('Content-Type', "application/json;charset=" + _encoding);
             serverResponse.setHeader('Content-Length', Buffer.byteLength(content, _encoding));
             serverResponse.writeHead(200, "OK");
@@ -195,15 +197,34 @@ module.exports = zn.Class({
             if(!clientRequest || !serverResponse || serverResponse.finished || !serverResponse.writable){
                 return;
             }
+            if(!err){
+                err = new new zn.ERROR.HttpRequestError({
+                    code: 501,
+                    message: "Throw Error.",
+                    detail: "Throw error is null."
+                });
+            }
             zn.error(err);
             this._logger.writeError(zn.date.asString(new Date()), 'Error [', err.name, err.code, err.message, ']', err.detail, err.stack);
 
-            var _data = err.gets?err.gets():err,
-                _contentType = clientRequest.headers['content-type'] || '',
+            var _data = err.gets?err.gets():{
+                code: 503,
+                message: err.message,
+                detail: err.stack
+            };
+            var _contentType = clientRequest.headers['content-type'] || '',
                 _content = JSON.stringify(_data);
 
             if(_contentType.toLowerCase().indexOf('application/json') != -1){
                 return this.doJSON(clientRequest, serverResponse, _content);
+            }
+
+            this.initHttpHeaderCommonSetting(clientRequest, serverResponse);
+
+            if(this._config.headers){
+                for(var key in this._config.headers){
+                    serverResponse.setHeader(key, this._config.headers[key]);
+                }
             }
 
             if(process.env.NODE_ENV == 'development' || this._config.mode == 'development'){
@@ -218,12 +239,6 @@ module.exports = zn.Class({
 
             if(err.code){
                 serverResponse.statusCode = err.code;
-            }
-
-            if(this._config.headers){
-                for(var key in this._config.headers){
-                    serverResponse.setHeader(key, this._config.headers[key]);
-                }
             }
             
             serverResponse.end();

@@ -82,15 +82,37 @@ module.exports = zn.Class({
         __loadAppsByConfig: function (){
             var _config = this._config,
                 _appConfigFileName = _config.app_config || VARS.CONFIG.app;
+            if(_config.node_modules) {
+                for(var name of _config.node_modules){
+                    var _char = name.charAt(0);
+                    if(_char == '.' || _char == '/') {
+                        var _path = node_path.join(process.cwd(), name, _appConfigFileName);
+                        if(node_fs.existsSync(_path)) {
+                            this.__createApplication(_path);
+                        }else{
+                            throw new Error(name + " (" + _path + ") " + ' is not exist.');
+                        }
+                    }else{
+                        this.__createApplication(require.resolve(node_path.join(name, _appConfigFileName)));
+                    }
+                }
+            }
 
-            _config.node_modules && _config.node_modules.forEach(function (name, index){
-                this.__createApplication(require.resolve(node_path.join(name, _appConfigFileName)));
-            }.bind(this));
-            
-            _config.paths && _config.paths.forEach(function (path){
-                this.__createApplication(node_path.resolve(node_path.join(this.root, path, _appConfigFileName)));
-            }.bind(this));
-
+            if(_config.paths) {
+                for(var name of _config.paths){
+                    var _char = name.charAt(0);
+                    if(_char == '.' || _char == '/') {
+                        var _path = node_path.join(this.root, name, _appConfigFileName);
+                        if(node_fs.existsSync(_path)) {
+                            this.__createApplication(_path);
+                        }else{
+                            throw new Error(name + " (" + _path + ") " + ' is not exist.');
+                        }
+                    }else{
+                        this.__createApplication(require.resolve(node_path.join(name, _appConfigFileName)));
+                    }
+                }
+            }
             
             if(_config.app){
                 this.createApplicaton(app, this.root);

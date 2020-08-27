@@ -3,7 +3,6 @@
  */
 var node_path = require('path');
 var ResponseWriter = require('./Response.Writer.js');
-var PACKAGE = require("../package.json");
 var VARS = require("./static/VARS");
 var Cookie = require('./Cookie');
 
@@ -120,56 +119,11 @@ module.exports = zn.Class({
         getTimestamp: function (){
             this._serverResponse.currentTimestamp - this._request._clientRequest.currentTimestamp;
         },
-        getCORSHTTPHeadersSetting: function (config){
-            var _headers = this._request._clientRequest.headers,
-                _origin = _headers.origin || _headers.host || _headers.Host,
-                _cors = config || {};
-            if(this._request.application) {
-                if(this._request.application.serverContext.config.cors) {
-                    _cors = zn.extend({}, this._request.application.serverContext.config.cors, _cors);
-                }
-                if(this._request.application.config.cors){
-                    _cors = zn.extend({}, this._request.application.config.cors, _cors);
-                }
-            }
-
-            return zn.overwrite({
-                'Access-Control-Allow-Origin': _origin,
-                'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
-                'Access-Control-Allow-Headers': 'Accept,Accept-Charset,Accept-Encoding,Accept-Language,Connection,Content-Type,Cookie,DNT,Host,Keep-Alive,Origin,Referer,User-Agent,X-CSRF-Token,X-Requested-With',
-                "Access-Control-Allow-Credentials": true,
-                'Access-Control-Max-Age': '3600'    //一个小时时间
-            }, _cors);
-        },
-        getBasicHTTPHeadersSetting: function (setting){
-            var _headers = this._request._clientRequest.headers,
-                _cookies = this.getCookiesValue(),
-                _basic = {
-                    'X-Powered-By': PACKAGE.name,
-                    'Server': PACKAGE.name,
-                    'Server-Version': PACKAGE.version,
-                    'Content-Type': (_headers["Content-Type"]||"application/json") + ';charset=' + (_headers["encoding"]||"utf-8")
-                };
-            if(_cookies){
-                _basic['Set-Cookie'] = _cookies;
-            }
-            
-            return zn.overwrite(_basic, setting);
-        },
         setContentType: function (contentType){
             this.setHeader("Content-Type", contentType);
         },
         getContentType: function (contentType, encoding){
             return VARS.CONTENT_TYPE[contentType||"JSON"] + ";charset=" + (encoding||"utf-8");
-        },
-        getResponseHTTPHeaders: function (config){
-            var _headers = {};
-            if(this._request.serverContext.config.cors || (this._request.application && this._request.application.config.cors)){
-                zn.overwrite(_headers, this.getCORSHTTPHeadersSetting());
-            }
-            zn.overwrite(_headers, this.getBasicHTTPHeadersSetting(), config);
-
-            return _headers;
         },
         setTimeout: function (msecs, callback){
             if(this._serverResponse.finished) return this;
@@ -227,6 +181,14 @@ module.exports = zn.Class({
             }
 
             return this;
+        },
+        setCommonHeaders: function (){
+            var _cookie = this.getCookiesValue();
+            if(_cookie) {
+                this._serverResponse.setHeader('Set-Cookie', _cookie);
+            }
+
+            return this._request._serverContext.initHttpHeaderCommonSetting(this._request._clientRequest, this._serverResponse), this;
         },
         getHeader: function (name) {
             if(this._serverResponse.finished) return;

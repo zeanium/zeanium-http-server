@@ -51,21 +51,30 @@ module.exports = zn.Class({
                     _meta = _controller.member(_action).meta || {};
                 
                 request.nextReload(route);
-                if(!this.__validateRouteMeta(_meta, request, response)) return;
                 if(_validate === undefined){
                     _validate = _controller.constructor.getMate('validate');
                 }
                 var _argv = [request, response, _application, this, _route];
+                if(_validate === true){
+                    return request.sessionVerify((session)=>{
+                        _argv.push(session);
+                        if(zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "sessionVerified", _argv) === false){
+                            return false;
+                        };
+                        if(!this.__validateRouteMeta(_meta, request, response)) return;
+                        _controller[_action].apply(_controller, _argv);
+                    }, (err)=>{
+                        this.doHttpError(request.clientRequest, response.serverResponse, err)
+                    });
+                }
+                
+                if(!this.__validateRouteMeta(_meta, request, response)) return;
                 if(_validate === undefined) {
                     return _controller[_action].apply(_controller, _argv);
                 }
 
                 if(_validate === false){
                     return _controller[_action].apply(_controller, _argv);
-                }
-
-                if(_validate === true){
-                    return request.sessionVerify(()=>_controller[_action].apply(_controller, _argv), (err)=>this.doHttpError(request.clientRequest, response.serverResponse, err));
                 }
 
                 if(typeof _validate == 'function' && _validate.call(_controller, request, response, _route) !== false){

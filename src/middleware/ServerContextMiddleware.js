@@ -36,6 +36,9 @@ var ServerContextMiddleware = zn.Middleware({
         doRoute: function (route, request, response){
             
         },
+        sessionVerified: function (session, request, response){
+
+        },
         doError: function (){
 
         }

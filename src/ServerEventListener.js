@@ -54,7 +54,11 @@ module.exports = zn.Class({
                     this._server._context.accept(clientRequest, serverResponse);
                 }
             } catch (err){
-                this._server._context.doHttpError(clientRequest, serverResponse, err);
+                if(this._server && this._server._context){
+                    this._server._context.doHttpError(clientRequest, serverResponse, err);
+                }else{
+                    zn.error('Server Error: ', err);
+                }
             }
         },
         __handlerOptionsMethod: function (clientRequest, serverResponse){
@@ -85,7 +89,7 @@ module.exports = zn.Class({
             zn.info('Listening in ', this._httpServer.address());
         },
         __onClose: function (){
-            console.log('server -- close');
+            zn.trace('server -- close');
             zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "close", Array.prototype.slice.call(arguments).concat([this]));
         }
     }
