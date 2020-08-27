@@ -1,3 +1,4 @@
+var Middleware = require('../Middleware');
 var CookieMiddleware = zn.Middleware({
     methods: {
         init: function (argv){
@@ -16,7 +17,7 @@ var CookieMiddleware = zn.Middleware({
 });
 
 zn.Middleware.Cookie = function (meta){
-    meta.TYPE = zn.middleware.TYPES.COOKIE;
+    meta.TYPE = Middleware.TYPES.COOKIE;
     return zn.Class(CookieMiddleware, meta);
 }
 

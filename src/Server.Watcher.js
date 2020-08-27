@@ -3,6 +3,7 @@
  */
 var node_path = require('path');
 var chokidar = require('chokidar');
+var Middleware = require('./Middleware');
 module.exports = zn.Class({
     methods: {
         __initWatcher: function (){
@@ -25,7 +26,7 @@ module.exports = zn.Class({
             zn.info('Watching Path: ', _watcher.cwd);
             chokidar.watch('.', _watcher)
             .on('raw', function(event, path, details) {
-                var _return = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "fileChanged", [event, path, details]);
+                var _return = Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "fileChanged", [event, path, details]);
                 if(_return === false) return _return;
                 var _path = path || details.path || details.watchedPath;
                 if(_path.substr(-3, 3)=='.js'){

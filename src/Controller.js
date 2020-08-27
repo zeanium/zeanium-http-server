@@ -1,3 +1,4 @@
+var Middleware = require('./Middleware');
 var Controller = zn.Class({
     properties: {
         context: null,
@@ -11,7 +12,7 @@ var Controller = zn.Class({
             value: function (context, application){
                 this._context = context;
                 this._application = application;
-                zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.CONTROLLER, "initial", [this, application, context]);
+                Middleware.callMiddlewareMethod(Middleware.TYPES.CONTROLLER, "initial", [this, application, context]);
                 var Service = this.constructor.getMeta('Service');
                 if(Service){
                     this._service = new Service(this, application, context);
@@ -27,7 +28,7 @@ zn.Controller = function (){
         _meta = _args[1];
 
     _meta.controller = _name;
-    zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.CONTROLLER, "define", [_name, _meta]);
+    Middleware.callMiddlewareMethod(Middleware.TYPES.CONTROLLER, "define", [_name, _meta]);
     
     return zn.Class(_name, Controller, _meta);
 }

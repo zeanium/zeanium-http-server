@@ -1,3 +1,4 @@
+var Middleware = require('../Middleware');
 var SessionMiddleware = zn.Middleware({
     methods: {
         init: function (argv){
@@ -22,7 +23,7 @@ var SessionMiddleware = zn.Middleware({
 });
 
 zn.Middleware.Session = function (meta){
-    meta.TYPE = zn.middleware.TYPES.SESSION;
+    meta.TYPE = Middleware.TYPES.SESSION;
     return zn.Class(SessionMiddleware, meta);
 }
 

@@ -1,3 +1,4 @@
+var Middleware = require('../Middleware');
 var SessionContextMiddleware = zn.Middleware({
     methods: {
         init: function (argv){
@@ -13,7 +14,7 @@ var SessionContextMiddleware = zn.Middleware({
 });
 
 zn.Middleware.SessionContext = function (meta){
-    meta.TYPE = zn.middleware.TYPES.SESSION_CONTEXT;
+    meta.TYPE = Middleware.TYPES.SESSION_CONTEXT;
     return zn.Class(SessionContextMiddleware, meta);
 }
 

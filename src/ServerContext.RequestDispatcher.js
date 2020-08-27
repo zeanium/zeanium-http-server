@@ -4,6 +4,7 @@
 var node_url = require('url');
 var node_fs = require('fs');
 var node_path = require('path');
+var Middleware = require('./Middleware');
 var MIMES = require('./static/MIMES');
 
 module.exports = zn.Class({
@@ -54,7 +55,7 @@ module.exports = zn.Class({
             if(this.execMiddleware("responseFinish", clientRequest, serverResponse) === false) return;
         },
         execMiddleware: function (method, clientRequest, serverResponse){
-            var _middlewares = zn.middleware.getMiddlewares(zn.middleware.TYPES.SERVER_CONTEXT),
+            var _middlewares = Middleware.getMiddlewares(Middleware.TYPES.SERVER_CONTEXT),
                 _middleware = null,
                 _method = null,
                 _return;

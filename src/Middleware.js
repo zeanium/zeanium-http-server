@@ -22,7 +22,9 @@ zn.Middleware = function (meta){
     return zn.Class(Middleware, meta);
 }
 
-zn.middleware = zn.Class({
+zn.Middleware.Class = Middleware;
+
+module.exports = zn.Class({
     static: true,
     properties: {
         TYPES: null,
@@ -89,5 +91,3 @@ zn.middleware = zn.Class({
         }
     }
 });
-
-module.exports = Middleware;

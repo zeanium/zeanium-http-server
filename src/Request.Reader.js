@@ -4,6 +4,7 @@
 var node_fs = require('fs');
 var node_path = require('path');
 var formidable = require('formidable');
+var Middleware = require('./Middleware');
 
 module.exports = zn.Class({
     events: [ 'data', 'end', 'close' ],
@@ -190,7 +191,7 @@ module.exports = zn.Class({
                     params: Object.assign({}, this._$params),
                     unmatchs: Array.from(this._$unmatchs),
                 }
-                var _return = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.REQUEST, "formParse", [err, fields, files, this]);
+                var _return = Middleware.callMiddlewareMethod(Middleware.TYPES.REQUEST, "formParse", [err, fields, files, this]);
                 if(_return !== false) {
                     callback && callback(err, fields, files);
                 }

@@ -34,7 +34,7 @@ module.exports = zn.Class({
                 this.start();
             }
             this.watching();
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER, "initial", [args, this]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER, "initial", [args, this]);
         },
         __init: function (_config){
             this._beginTimestamp = (new Date()).getTime();
@@ -57,19 +57,19 @@ module.exports = zn.Class({
             return this._server.listen(listen), this;
         },
         use: function (middleware){
-            return zn.middleware.use(middleware), this;
+            return Middleware.use(middleware), this;
         },
         uses: function (middlewares){
             return this.__loadMiddlewares(middlewares), this;
         },
         middleware: function (middleware){
-            return zn.middleware.use(middleware), this;
+            return Middleware.use(middleware), this;
         },
         start: function (config){
             var _config = zn.overwrite(config||{}, this._config);
             this.__createServerContext(_config);
             this.__createHTTPServer(_config);
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER, "started", [_config, this]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER, "started", [_config, this]);
         },
         close: function (){
             return this._server.close(), this;
@@ -89,13 +89,13 @@ module.exports = zn.Class({
                     }
                 }
 
-                if(typeof _middlewares == 'function' && _middlewares.getMeta('TYPE') && zn.middleware.TYPES[_middlewares.getMeta('TYPE')]){
-                    zn.middleware.use(_middlewares);
+                if(typeof _middlewares == 'function' && _middlewares.getMeta('TYPE') && Middleware.TYPES[_middlewares.getMeta('TYPE')]){
+                    Middleware.use(_middlewares);
                 } else if(_middlewares instanceof Middleware){
-                    zn.middleware.use(_middlewares);
+                    Middleware.use(_middlewares);
                 } else if(zn.is(_middlewares, 'object')){
                     for(var key in _middlewares){
-                        zn.middleware.use(_middlewares[key]);
+                        Middleware.use(_middlewares[key]);
                     }
                 }
             });

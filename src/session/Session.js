@@ -1,6 +1,7 @@
 /**
  * Created by yangyxu on 7/14/15.
  */
+var Middleware = require('../Middleware');
 module.exports = zn.Class({
     properties: {
         id: null,
@@ -23,7 +24,7 @@ module.exports = zn.Class({
             if(context){
                 this._cookies.push(context.getSessionKey());
             }
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "initial", [context, this]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "initial", [context, this]);
         },
         initialize: function (){
             this._id = this.generateId();
@@ -141,13 +142,13 @@ module.exports = zn.Class({
         generateId: function (){
             var _token = this._context.sign();
             zn.trace('Session Token: ', _token);
-            return zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "generateId", [_token, this]) || _token;
+            return Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "generateId", [_token, this]) || _token;
         },
         updateId: function (){
             var _id = this.generateId();
             this._isNew = false;
             this._lastAccessedTime = (new Date()).getTime();
-            this._id = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "updateId", [_id, this]) || _id;
+            this._id = Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "updateId", [_id, this]) || _id;
 
             return this._id;
         },
@@ -156,20 +157,20 @@ module.exports = zn.Class({
                 _time = _date + (this._context._config.timeout * 1000);
             this._isNew = false;
             this._lastAccessedTime = _date;
-            this._expiresTime = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "updateExpiresTime", [_time, this]) || _time;
+            this._expiresTime = Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "updateExpiresTime", [_time, this]) || _time;
             return this._expiresTime;
         },
         invalidate: function (){
             this._expiresTime = (new Date()).getTime() - 1;
             this._context.removeSession(this._id);
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "invalidate", [this]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "invalidate", [this]);
         },
         isNew: function (){
             return this._isNew;
         },
         serialize: function (){
             var _value = JSON.stringify(this.getProps());
-            return zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SESSION, "serialize", [_value, this]) || _value;
+            return Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "serialize", [_value, this]) || _value;
         },
         destory: function (){
             this.invalidate();

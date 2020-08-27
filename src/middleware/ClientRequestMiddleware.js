@@ -1,3 +1,4 @@
+var Middleware = require('../Middleware');
 var ClientRequestMiddleware = zn.Middleware({
     methods: {
         init: function (argv){
@@ -40,7 +41,7 @@ var ClientRequestMiddleware = zn.Middleware({
 });
 
 zn.Middleware.ClientRequest = function (meta){
-    meta.TYPE = zn.middleware.TYPES.CLIENT_REQUEST;
+    meta.TYPE = Middleware.TYPES.CLIENT_REQUEST;
     return zn.Class(ClientRequestMiddleware, meta);
 }
 

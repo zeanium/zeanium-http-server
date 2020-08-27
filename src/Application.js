@@ -5,6 +5,7 @@ var node_path = require('path');
 var node_fs = require('fs');
 var ApplicationController = require('./controller/ApplicationController');
 var CONFIG = require('./config/zn.app.config.js');
+var Middleware = require('./Middleware');
 
 module.exports = zn.Class({
     properties: {
@@ -20,7 +21,7 @@ module.exports = zn.Class({
     },
     methods: {
         init: function (config, serverContext){
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "init", [this, config, serverContext]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "init", [this, config, serverContext]);
             zn.info("Loading Path: ", config.root);
             var _config = zn.deepAssigns({}, CONFIG, config);
             this._config = _config;
@@ -33,7 +34,7 @@ module.exports = zn.Class({
             this.__initial(_config, serverContext);
             serverContext.registerApplication(this);
             zn.info("Application[ ", config.deploy, " ] Loaded.");
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "loaded", [this, config, serverContext]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "loaded", [this, config, serverContext]);
         },
         existPath: function (path){
             return node_fs.existsSync(node_path.join(this._webRoot, path));
@@ -66,7 +67,7 @@ module.exports = zn.Class({
             this._routes = this.__initRoutes(this._controllers);
             this._formidable = this._serverContext.__initFileUploadConfig(this._config.formidable);
 
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initial", [this, config, serverContext]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "initial", [this, config, serverContext]);
         },
         __initModules: function (modules){
             if(zn.is(modules, 'array')) {
@@ -85,7 +86,7 @@ module.exports = zn.Class({
         },
         __initRoutes: function (controllers){
             var _routes = [];
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initControllers", [this, controllers]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "initControllers", [this, controllers]);
             
             if(controllers){
                 zn.each(controllers, function (Controller, name){
@@ -94,7 +95,7 @@ module.exports = zn.Class({
                 }.bind(this));
             }
             
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.APPLICATION, "initRoutes", [this, _routes]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "initRoutes", [this, _routes]);
             
             return _routes;
         },

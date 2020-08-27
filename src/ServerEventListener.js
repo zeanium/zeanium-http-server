@@ -2,7 +2,8 @@
  * Created by yangyxu on 8/20/14.
  */
 var node_path = require('path');
-var MIDDLEWARE_KEY = zn.middleware.TYPES.HTTP_SERVER;
+var Middleware = require('./Middleware');
+var MIDDLEWARE_KEY = Middleware.TYPES.HTTP_SERVER;
 module.exports = zn.Class({
     properties: {
         httpServer: null, 
@@ -24,22 +25,22 @@ module.exports = zn.Class({
             httpServer.on("close", this.__onClose.bind(this));
         },
         __onCheckContinue: function (clientRequest, serverResponse){
-            zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "checkContinue", Array.prototype.slice.call(arguments).concat([this]));
+            Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "checkContinue", Array.prototype.slice.call(arguments).concat([this]));
         },
         __onCheckExpectation: function (clientRequest, serverResponse){
             this._server._context.logger.writeError(zn.date.asString(new Date()), 'Error [', err.name, err.message, ']', err.stack);
-            zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "checkExpectation", Array.prototype.slice.call(arguments).concat([this]));
+            Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "checkExpectation", Array.prototype.slice.call(arguments).concat([this]));
         },
         __onClientError: function (err, socket){
             socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
             this._server._context.logger.writeError(zn.date.asString(new Date()), 'Error [', err.name, err.message, ']', err.stack);
-            zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "clientError", Array.prototype.slice.call(arguments).concat([this]));
+            Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "clientError", Array.prototype.slice.call(arguments).concat([this]));
         },
         __onConnect: function (){
-            zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "connect", Array.prototype.slice.call(arguments).concat([this]));
+            Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "connect", Array.prototype.slice.call(arguments).concat([this]));
         },
         __onConnection: function (socket){
-            zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "connection", Array.prototype.slice.call(arguments).concat([this]));
+            Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "connection", Array.prototype.slice.call(arguments).concat([this]));
         },
         __onRequest: function (clientRequest, serverResponse){
             try{
@@ -49,7 +50,7 @@ module.exports = zn.Class({
                 if(clientRequest.method == 'OPTIONS'){
                     return this.__handlerOptionsMethod(clientRequest, serverResponse), false;
                 }
-                var _return = zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "request", [clientRequest, serverResponse, this._server]);
+                var _return = Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "request", [clientRequest, serverResponse, this._server]);
                 if(_return !== false){
                     this._server._context.accept(clientRequest, serverResponse);
                 }
@@ -78,19 +79,19 @@ module.exports = zn.Class({
             serverResponse.end();
         },
         __onUpgrade: function (){
-            zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "upgrade", Array.prototype.slice.call(arguments).concat([this]));
+            Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "upgrade", Array.prototype.slice.call(arguments).concat([this]));
         },
         __onError: function (err){
-            zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "error", [err, this._server]);
+            Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "error", [err, this._server]);
             zn.error(err);
         },
         __onListening: function (){
-            //zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "listening", Array.prototype.slice.call(arguments).concat([this]));
+            Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "listening", Array.prototype.slice.call(arguments).concat([this]));
             zn.info('Listening in ', this._httpServer.address());
         },
         __onClose: function (){
             zn.trace('server -- close');
-            zn.middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "close", Array.prototype.slice.call(arguments).concat([this]));
+            Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "close", Array.prototype.slice.call(arguments).concat([this]));
         }
     }
 });

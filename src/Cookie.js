@@ -1,4 +1,5 @@
 var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
+var Middleware = require('./Middleware');
 module.exports = zn.Class({
     properties: {
         name: null,
@@ -20,7 +21,7 @@ module.exports = zn.Class({
             this._name = name;
             this._value = value;
             this.sets(options);
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.COOKIE, "initial", [name, value, options, this]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.COOKIE, "initial", [name, value, options, this]);
         },
         setName: function (name){
             return this._name = name, this;
@@ -121,7 +122,7 @@ module.exports = zn.Class({
         },
         serialize: function (){
             var _props = this.gets();
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.COOKIE, "serialize", [_props, this]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.COOKIE, "serialize", [_props, this]);
             var _pairs = [_props.name + '=' + encodeURIComponent(_props.value)];
             if (_props.data) {
                 zn.each(_props.data, function (value, key){
@@ -144,7 +145,7 @@ module.exports = zn.Class({
             if (_props.priority) _pairs.push('Priority=' + _props.priority);
             if (_props.comment) _pairs.push('Comment=' + _props.comment);
 
-            return zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.COOKIE, "serialized", [_pairs, _props, this]) || _pairs.join('; ');
+            return Middleware.callMiddlewareMethod(Middleware.TYPES.COOKIE, "serialized", [_pairs, _props, this]) || _pairs.join('; ');
         }
     }
 });

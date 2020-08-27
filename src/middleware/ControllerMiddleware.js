@@ -1,3 +1,4 @@
+var Middleware = require('../Middleware');
 var ControllerMiddleware = zn.Middleware({
     methods: {
         init: function (argv){
@@ -13,7 +14,7 @@ var ControllerMiddleware = zn.Middleware({
 });
 
 zn.Middleware.Controller = function (meta){
-    meta.TYPE = zn.middleware.TYPES.CONTROLLER;
+    meta.TYPE = Middleware.TYPES.CONTROLLER;
     return zn.Class(ControllerMiddleware, meta);
 }
 

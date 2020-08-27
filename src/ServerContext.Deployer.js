@@ -3,6 +3,7 @@
  */
 var node_fs = require('fs');
 var node_path = require('path');
+var Middleware = require('./Middleware');
 var Application = require('./Application.js');
 var ServerController = require('./controller/ServerController.js');
 var VARS = require('./static/VARS.js');
@@ -20,7 +21,7 @@ module.exports = zn.Class({
             this.__loadDefaultApps();
         },
         __loadDefaultControllers: function (Controllers){
-            var _value = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "loadControllers", [Controllers, this]);
+            var _value = Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "loadControllers", [Controllers, this]);
             var _Controllers = _value || Controllers;
             for(var Controller of _Controllers){
                 this._routes = this._routes.concat(this.__convertControllerToRouters(Controller));

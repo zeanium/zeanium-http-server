@@ -4,6 +4,7 @@
 var Request = require('./Request._.js');
 var Response = require('./Response._.js');
 var RouteChain = require('./RouteChain');
+var Middleware = require('./Middleware');
 
 module.exports = zn.Class({
     methods: {
@@ -40,7 +41,7 @@ module.exports = zn.Class({
         },
         doRoute: function (route, request, response){
             try {
-                if(zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "doRoute", [route, request, response, this]) === false){
+                if(Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "doRoute", [route, request, response, this]) === false){
                     return false;
                 };
                 var _route = route.route,
@@ -58,7 +59,7 @@ module.exports = zn.Class({
                 if(_validate === true){
                     return request.sessionVerify((session)=>{
                         _argv.push(session);
-                        if(zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "sessionVerified", _argv) === false){
+                        if(Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "sessionVerified", _argv) === false){
                             return false;
                         };
                         if(!this.__validateRouteMeta(_meta, request, response)) return;

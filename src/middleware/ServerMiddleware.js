@@ -1,3 +1,4 @@
+var Middleware = require('../Middleware');
 var ServerMiddleware = zn.Middleware({
     methods: {
         init: function (argv){
@@ -13,7 +14,7 @@ var ServerMiddleware = zn.Middleware({
 });
 
 zn.Middleware.Server = function (meta){
-    meta.TYPE = zn.middleware.TYPES.SERVER;
+    meta.TYPE = Middleware.TYPES.SERVER;
     return zn.Class(ServerMiddleware, meta);
 }
 

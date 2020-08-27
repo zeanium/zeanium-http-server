@@ -8,6 +8,7 @@ var ServerContextRequestDispatcher = require('./ServerContext.RequestDispatcher.
 var ServerContextRequestRouter = require('./ServerContext.RequestRouter.js');
 var MemorySessionContext = require('./session/MemorySessionContext');
 var PathMatcher = require('./PathMatcher');
+var Middleware = require('./Middleware');
 var Logger = require('./Logger');
 var PACKAGE = require("../package.json");
 
@@ -53,7 +54,7 @@ module.exports = zn.Class({
             this.__initSessionContext();
             this.__deploy();
             this.__loadingCompleted();
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "initial", [config, server, this]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "initial", [config, server, this]);
         },
         resolveModel: function (modelName){
             return this._models[modelName];
@@ -70,7 +71,7 @@ module.exports = zn.Class({
                 sessionContext.setServerContext(this);
             }
 
-            return this._sessionContext = zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "registerSessionContext", [sessionContext, this]) || sessionContext, this;
+            return this._sessionContext = Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "registerSessionContext", [sessionContext, this]) || sessionContext, this;
         },
         __initial: function (config){
             this._apps = {};
@@ -97,7 +98,7 @@ module.exports = zn.Class({
                     zn.info(_address);
                 }
             }.bind(this));
-            zn.middleware.callMiddlewareMethod(zn.middleware.TYPES.SERVER_CONTEXT, "loadCompleted", [_timestamp, _urls, this]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "loadCompleted", [_timestamp, _urls, this]);
             zn.info('[ ',_timestamp, 's ] Loading Completed.')
         },
         __parseURL: function (host){
