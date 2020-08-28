@@ -71,11 +71,10 @@ module.exports = zn.Class({
                 "Access-Control-Allow-Credentials": true,
                 'Access-Control-Max-Age': '3600',//一个小时时间
                 'X-Powered-By': (_package.name + '@' + _package.version),
-                'Content-Type': 'text/html;charset=utf-8',
-                'Trailer': 'Content-MD5'
+                'Content-Type': 'text/html;charset=utf-8'
             });
             serverResponse.write('<a href="https://github.com/zeanium/zeanium-http-server">' + _package.name + '</a>');
-            serverResponse.addTrailers({ 'Content-MD5': zn.uuid().toLocaleLowerCase() });
+            //serverResponse.addTrailers({ 'Content-MD5': zn.uuid().toLocaleLowerCase() });
             serverResponse.end();
         },
         __onUpgrade: function (){
