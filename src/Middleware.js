@@ -74,6 +74,7 @@ module.exports = zn.Class({
             var _middlewares = this.getMiddlewares(TYPE),
                 _middleware = null,
                 _return;
+            zn.trace('Middleware.callMiddlewareMethod: ', TYPE, method, _middlewares.length);
             for(var i = 0, _len = _middlewares.length; i < _len; i++){
                 _middleware = _middlewares[i];
                 if(_middleware[method] && typeof _middleware[method] == 'function'){
