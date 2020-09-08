@@ -114,8 +114,7 @@ module.exports = zn.Class({
             for(var _key in _args){
                 _defaultValue = _args[_key];
                 _newValue = _values[_key];
-
-                if (_defaultValue !== undefined && _newValue === undefined){
+                if (_defaultValue == null && _newValue == null){
                     throw new zn.ERROR.HttpRequestError({
                         code: 400,
                         message: "Missing Parameter Error.",
