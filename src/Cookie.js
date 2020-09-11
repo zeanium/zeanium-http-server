@@ -6,7 +6,7 @@ module.exports = zn.Class({
         value: null,
         domain: null,
         path: '/',
-        expires: 1800,
+        expires: 3600,
         maxAge: 0,
         size: null,
         httpOnly: true,

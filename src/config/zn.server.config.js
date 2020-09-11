@@ -49,7 +49,7 @@ module.exports = {
     session: {
         context: null,
         name: 'ZNSESSIONID',
-        expires: 60 * 30,
+        expires: 60 * 60 * 60 * 24,
         rolling: false,    //每个请求都重新设置一个 cookie，默认为 false
         secret: "www.zeanium.com",     //通过设置的 secret 字符串，来计算 hash 值并放在 cookie 中，使产生的 signedCookie 防篡改
         cookie: {
@@ -58,7 +58,7 @@ module.exports = {
             maxAge: 0,
             //domain: '/',
             path: '/',
-            expires: 1800,
+            expires: 60 * 60 * 60 * 24,
             httpOnly: true,
             secure: false
         }

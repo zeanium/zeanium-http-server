@@ -15,6 +15,7 @@ var SessionContext = zn.Class({
             auto: true,
             value: function (config, serverContext){
                 this._config = config;
+                this._secret = this._config.secret || 'zeanium-http-server';
                 this._serverContext = serverContext;
             }
         },
@@ -33,8 +34,8 @@ var SessionContext = zn.Class({
             return this._config = config, this;
         },
         jwtSign: function (data, expiresIn, secret){
-            var _secret = secret || this._config.secret || 'zeanium',
-                _expires = expiresIn || this._config.expires || 60 * 30;
+            var _secret = secret || this._secret,
+                _expires = expiresIn || this._config.expires || 60 * 60 * 60 * 24;
             return node_jwt.sign({
                 data: data
             }, _secret, { 
@@ -42,10 +43,10 @@ var SessionContext = zn.Class({
             });
         },
         jwtVerifyToken: function (token, secret){
-            return node_jwt.verify(token, secret || this._config.secret || 'zeanium');
+            return node_jwt.verify(token, secret || this._secret);
         },
         cryptoSign: function (data, secret){
-            var _secret = secret || this._config.secret || 'zeanium',
+            var _secret = secret || this._secret,
                 _currDate = (new Date()).valueOf().toString(),
                 _random = Math.random().toString();
             return node_crypto.createHash('sha1').update(_currDate + _random + _secret + (typeof data == 'object' ? JSON.stringify(data) : data.toString())).digest('hex');
