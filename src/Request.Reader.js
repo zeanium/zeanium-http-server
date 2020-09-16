@@ -4,6 +4,7 @@
 var node_fs = require('fs');
 var node_path = require('path');
 var formidable = require('formidable');
+var xml2js = require('xml2js');
 var Middleware = require('./Middleware');
 
 module.exports = zn.Class({
@@ -199,12 +200,50 @@ module.exports = zn.Class({
             return this;
         },
         __parseFormData: function (clientRequest, callback){
-            var _incomingForm = new formidable.IncomingForm(),
+            var _contentType = clientRequest.headers['content-type'];
+            if(_contentType == 'application/xml') {
+                var _parser = new xml2js.Parser({
+                    async: false,
+                    explicitArray: false,
+                    normalize: true,
+                    normalizeTags: true,
+                    trim: true
+                }), _data = '', _parseValue = {};
+
+                // in case `parseString` callback never was called, ensure response is sent
+                _parser.saxParser.onend = function() {
+                    if(Object.keys(_parseValue).length){
+                        return false;
+                    }
+                    if (clientRequest.complete && clientRequest.rawBody === undefined) {
+                        return callback && callback(null, _parseValue);
+                    }
+                };
+
+                // explicitly cast incoming to string
+                clientRequest.setEncoding('utf-8');
+                clientRequest.on('data', function (chunk) {
+                    _data += chunk;
+                });
+
+                clientRequest.on('end', function () {
+                    // invalid xml, length required
+                    if (_data.trim().length === 0) {
+                        callback && callback(null, _parseValue);
+                    }else{
+                        _parser.parseString(_data, function (err, data){
+                            _parseValue = data.xml;
+                            callback && callback(err, _parseValue);
+                        });
+                    }
+                });
+            }else{
+                var _incomingForm = new formidable.IncomingForm(),
                 _config = zn.extend(this.application ? this.application.formidable : this.serverContext.formidable);
-            
-            zn.extend(_incomingForm, _config);
-            
-            return _incomingForm.parse(clientRequest, callback), _incomingForm;
+                zn.extend(_incomingForm, _config);
+                
+                return _incomingForm.parse(clientRequest, callback), _incomingForm;
+            }
         },
         uploadFile: function (file, options){
             if(zn.is(file, 'string')){

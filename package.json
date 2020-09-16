@@ -1,6 +1,6 @@
 {
   "name": "@zeanium/http-server",
-  "version": "1.3.17",
+  "version": "1.3.18",
   "description": "zeanium http server module",
   "main": "index.js",
   "repository": {
@@ -25,6 +25,7 @@
     "@zeanium/core": "latest",
     "chokidar": "^3.3.1",
     "formidable": "^1.2.2",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "xml2js": "^0.4.23"
   }
 }
