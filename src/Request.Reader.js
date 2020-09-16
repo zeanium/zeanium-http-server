@@ -172,10 +172,6 @@ module.exports = zn.Class({
             if(clientRequest.parent && this._parsed){
                 return callback && callback(null, this._$post, this._$files), false;
             }
-            var _ct = clientRequest.headers['content-type']||'';
-            if(_ct.toLowerCase().indexOf('text/xml') != -1){
-                return false;
-            }
             
             this.__parseFormData(clientRequest, function(err, fields, files){
                 if(!err){
@@ -200,8 +196,8 @@ module.exports = zn.Class({
             return this;
         },
         __parseFormData: function (clientRequest, callback){
-            var _contentType = clientRequest.headers['content-type'];
-            if(_contentType == 'application/xml') {
+            var _contentType = clientRequest.headers['content-type'] || '';
+            if(_contentType.indexOf('/xml') != -1) {
                 var _parser = new xml2js.Parser({
                     async: false,
                     explicitArray: false,
