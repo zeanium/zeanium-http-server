@@ -82,10 +82,11 @@ module.exports = zn.Class({
             }
         },
         getValue: function (inName) {
+            var _values = zn.extend({}, this._$data, this._$get, this._$post, this._$params);
             if(inName){
-                return this._$data[inName] || this._$params[inName];
+                return _values[inName];
             } else {
-                return zn.deepAssign({}, this._$data, this._$params);
+                return _values;
             }
         },
         getParameter: function (key){
