@@ -11,6 +11,7 @@ module.exports = zn.Class({
         lastAccessedTime: null,
         values: null,
         attributes: null,
+        expires: 0,
         cookies: null,
         interval: 30 * 1000,
         context: null
@@ -23,6 +24,7 @@ module.exports = zn.Class({
             this._context = context;
             if(context){
                 this._cookies.push(context.getSessionKey());
+                this._expires = (context._config.expires || 60 * 60 * 8) * 1000;
             }
             Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "initial", [context, this]);
         },
@@ -30,7 +32,7 @@ module.exports = zn.Class({
             this._id = this.generateId();
             this._isNew = true;
             this._createdTime = (new Date()).getTime();
-            this._expiresTime = this._createdTime + ((this._context.config.expires || 1800 ) * 1000);
+            this._expiresTime = this._createdTime + this._expires;
         },
         save: function (){
             return this._context.saveSession(this), this;
@@ -58,7 +60,6 @@ module.exports = zn.Class({
             };
         },
         bindCookie: function (name){
-            if(!this._isNew) return this;
             if(this._cookies.indexOf(name) == -1){
                 this._cookies.push(name)
             }
@@ -66,9 +67,15 @@ module.exports = zn.Class({
             return this;
         },
         unbindCookie: function (name){
-            if(!this._isNew) return this;
             if(this._cookies.indexOf(name) != -1){
                 this._cookies = this._cookies.filter((cookie)=>!cookie==name);
+            }
+
+            return this;
+        },
+        setId: function (value){
+            if(value) {
+                this._id = value
             }
 
             return this;
@@ -154,7 +161,7 @@ module.exports = zn.Class({
         },
         updateExpiresTime: function (){
             var _date = (new Date()).getTime(),
-                _time = _date + (this._context._config.timeout * 1000);
+                _time = _date + this._expires;
             this._isNew = false;
             this._lastAccessedTime = _date;
             this._expiresTime = Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "updateExpiresTime", [_time, this]) || _time;

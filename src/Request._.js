@@ -97,19 +97,27 @@ module.exports = zn.Class({
         getSessionConfig: function (){
             return this._serverContext._sessionContext.config;
         },
+        createSession: function (props, success, error){
+            if(props){
+                var _context = this._serverContext._sessionContext;
+                this._session = _context.createSession(props, success, error);
+            }
+
+            return this._session;
+        },
         getSession: function (props, success, error){
             var _context = this._serverContext._sessionContext;
             var _cookie = this.getCookie(_context.getSessionKey());
             if(_cookie){
                 _context.getSession(_cookie.getValue(), function (session){
-                    if(session && props) {
-                        session.setProps(props);
+                    if(session){
+                        if(props){
+                            session.setProps(props);
+                        }
+                        this._session = session;
+                        success && success(session);
                     }
-                    this._session = session;
-                    success && success(session);
                 }.bind(this), error);
-            }else if(props){
-                this._session = _context.createSession(props, success, error);
             }else{
                 error && error();
             }

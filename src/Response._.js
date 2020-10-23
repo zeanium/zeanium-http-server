@@ -23,7 +23,7 @@ module.exports = zn.Class({
             });
         },
         createSession: function (props, cookies, success, error){
-            return this._request.getSession(props, function (session){
+            return this._request.createSession(props, function (session){
                 var _sessionKey = this._request._serverContext._sessionContext.getSessionKey();
                 session.bindCookie(_sessionKey);
                 this.createCookie(_sessionKey, session.getId());
@@ -38,7 +38,6 @@ module.exports = zn.Class({
                         this.createCookie(cookie.name, cookie.value, cookie);
                     }
                 }
-
                 session.save();
                 success && success(session);
             }.bind(this), error), this;

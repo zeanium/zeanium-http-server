@@ -171,6 +171,12 @@ module.exports = zn.Class({
             if(!node_path.isAbsolute(path) || node_fs.existsSync(path)){
                 return path;
             }
+            node_fs.mkdirSync(path, {
+                recursive: true,
+                mode: 0o777
+            });
+
+            /*
             var _paths = path.split(node_path.sep),
                 _path;
             _paths.map(function (value){
@@ -180,7 +186,7 @@ module.exports = zn.Class({
                         node_fs.mkdirSync(_path, 0766);
                     }
                 }
-            });
+            });*/
         },
         getFileUploadConfig: function (config){
             return this.__initFileUploadConfig(config);
