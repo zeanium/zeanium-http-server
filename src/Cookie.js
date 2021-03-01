@@ -1,13 +1,14 @@
 var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
 var Middleware = require('./Middleware');
+var DURATION = 60 * 60 * 24;
 module.exports = zn.Class({
     properties: {
         name: null,
         value: null,
         domain: null,
         path: '/',
-        expires: 3600,
-        maxAge: 0,
+        expires: DURATION,
+        maxAge: DURATION,
         size: null,
         httpOnly: true,
         secure: false,

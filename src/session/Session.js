@@ -2,6 +2,7 @@
  * Created by yangyxu on 7/14/15.
  */
 var Middleware = require('../Middleware');
+var DURATION = 60 * 60 * 24;
 module.exports = zn.Class({
     properties: {
         id: null,
@@ -24,7 +25,7 @@ module.exports = zn.Class({
             this._context = context;
             if(context){
                 this._cookies.push(context.getSessionKey());
-                this._expires = (context._config.expires || 60 * 60 * 8) * 1000;
+                this._expires = (context._config.expires || DURATION) * 1000;
             }
             Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "initial", [context, this]);
         },
