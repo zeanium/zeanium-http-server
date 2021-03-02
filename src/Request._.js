@@ -71,8 +71,8 @@ module.exports = zn.Class({
                 if(_cookies.length){
                     error && error(new zn.ERROR.HttpRequestError({
                         code: 403,
-                        message: "Session Verify Error.",
-                        detail: "Session Verify Error, You Need Relogin."
+                        message: "会话验证错误",
+                        detail: "请重新登录系统。"
                     }));
                 }else{
                     this._session = session;
@@ -81,8 +81,8 @@ module.exports = zn.Class({
             }.bind(this), function (){
                 error && error(new zn.ERROR.HttpRequestError({
                     code: 401,
-                    message: "Unauthorized.",
-                    detail: "Unauthorized, You Need Login Into System First."
+                    message: "401.1 未经授权",
+                    detail: "访问由于凭据无效被拒绝，请先登录系统。"
                 }));
             });
 

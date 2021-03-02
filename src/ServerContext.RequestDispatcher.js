@@ -182,8 +182,8 @@ module.exports = zn.Class({
 
             throw new zn.ERROR.HttpRequestError({
                 code: 403,
-                message: 'Unauthorized.',
-                detail: "You are not authorized to view this directory or page using the credentials provided."
+                message: '401.7 未经授权',
+                detail: "由于Web服务器上的URL授权策略而拒绝访问。"
             });
         },
         doJSON: function (clientRequest, serverResponse, content){
@@ -201,18 +201,21 @@ module.exports = zn.Class({
             if(!err){
                 err = new new zn.ERROR.HttpRequestError({
                     code: 501,
-                    message: "Throw Error.",
-                    detail: "Throw error is null."
+                    message: "抛错误异常",
+                    detail: "错误不存在。"
                 });
             }
-            zn.error(err);
             this._logger.writeError(zn.date.asString(new Date()), 'Error [', err.name, err.code, err.message, ']', err.detail, err.stack);
-
             var _data = err.gets?err.gets():{
                 code: 503,
                 message: err.message,
                 detail: err.stack
             };
+
+            zn.error(_data);
+            _data.stack = null;
+            delete _data.stack;
+
             var _contentType = clientRequest.headers['content-type'] || '',
                 _content = JSON.stringify(_data);
 
@@ -228,11 +231,8 @@ module.exports = zn.Class({
                 }
             }
 
-            if(process.env.NODE_ENV == 'development' || this._config.mode == 'development'){
-                serverResponse.write(_content);
-            } else {
-                serverResponse.write(_data.message + ': ' + _data.detail);
-            }
+            serverResponse.setHeader('Content-Type', "application/json;charset=utf-8");
+            serverResponse.write(_content);
             
             if(err.message){
                 serverResponse.statusMessage = err.message;
