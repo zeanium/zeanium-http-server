@@ -13,6 +13,8 @@ module.exports = zn.Class({
         serverContext: null,
         formidable: null,
         controllers: null,
+        R: null,
+        Sql: null,
         models: null,
         modules: null,
         routes: null,
@@ -47,8 +49,12 @@ module.exports = zn.Class({
         },
         __initial: function (config, serverContext){
             var _deploy = config.deploy;
+            if(config.R){
+                this._R = this.__loadPackages(config.R);
+            }
             this.__initModules(config.modules);
             this.__loadMiddlewares(config.middlewares);
+            this._Sql = {};
             this._models = {};
             this._modelArray = [];
             this.__loadPackages(config.models, function (key, model){
@@ -62,6 +68,7 @@ module.exports = zn.Class({
                 }
                 this._modelArray.push(model);
                 this._models[_deploy + '.' + key] = this._serverContext._models[_deploy + '.' + key] = model;
+                Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "modelLoaded", [key, model, this, serverContext]);
             }.bind(this));
             zn.extend(this._controllers,  this.__loadPackages(config.controllers));
             this._routes = this.__initRoutes(this._controllers);

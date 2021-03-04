@@ -84,8 +84,8 @@ module.exports = zn.Class({
 
                 throw new zn.ERROR.HttpRequestError({
                     code: 401,
-                    message: "Unauthorized.",
-                    detail: "Unauthorized, You Need Login Into System First."
+                    message: "401.1 未经授权",
+                    detail: "访问由于凭据无效被拒绝，请先登录系统。"
                 });
             } catch (err) {
                 this.doHttpError(request.clientRequest, response.serverResponse, err);
