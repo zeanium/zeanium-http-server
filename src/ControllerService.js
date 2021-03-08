@@ -6,7 +6,6 @@ var ControllerService = zn.Class({
     },
     methods: {
         init: {
-            router: null,
             auto: true,
             value: function (controller, application, context){
                 this._application = application;
