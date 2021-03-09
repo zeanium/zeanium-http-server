@@ -4,6 +4,7 @@ module.exports = {
     ClientRequestMiddleware: require('./ClientRequestMiddleware'),
     ControllerMiddleware: require('./ControllerMiddleware'),
     CookieMiddleware: require('./CookieMiddleware'),
+    ModelMiddleware: require('./ModelMiddleware'),
     HttpServerMiddleware: require('./HttpServerMiddleware'),
     RequestMiddleware: require('./RequestMiddleware'),
     ResponseMiddleware: require('./ResponseMiddleware'),

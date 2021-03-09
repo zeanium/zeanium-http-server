@@ -49,28 +49,42 @@ module.exports = zn.Class({
         },
         __initial: function (config, serverContext){
             var _deploy = config.deploy;
-            if(config.R){
-                this._R = this.__loadPackages(config.R);
-            }
-            this.__initModules(config.modules);
-            this.__loadMiddlewares(config.middlewares);
             this._Sql = {};
             this._models = {};
             this._modelArray = [];
-            this.__loadPackages(config.models, function (key, model){
-                model.setMeta('application', _deploy);
-                if(config.table_prefix){
-                    model.setMeta('tablePrefix', config.table_prefix);
-                    this._models[_deploy + '.' + config.table_prefix + key] = this._serverContext._models[_deploy + '.' + config.table_prefix + key] = model;
-                }
-                if(model.getMeta('alias')){
-                    this._models[_deploy + '.' + model.getMeta('alias')] = this._serverContext._models[_deploy + '.' + model.getMeta('alias')] = model;
-                }
-                this._modelArray.push(model);
-                this._models[_deploy + '.' + key] = this._serverContext._models[_deploy + '.' + key] = model;
-                Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "modelLoaded", [key, model, this, serverContext]);
-            }.bind(this));
-            zn.extend(this._controllers,  this.__loadPackages(config.controllers));
+            if(config.R){
+                this._R = this.__loadPackages(config.R);
+            }
+
+            if(config.modules) {
+                this.__initModules(config.modules);
+            }
+
+            if(config.middlewares) {
+                this.__loadMiddlewares(config.middlewares);
+            }
+
+            if(config.models) {
+                this.__loadPackages(config.models, function (key, model){
+                    model.setMeta('application', _deploy);
+                    if(config.table_prefix){
+                        model.setMeta('tablePrefix', config.table_prefix);
+                        this._models[_deploy + '.' + config.table_prefix + key] = this._serverContext._models[_deploy + '.' + config.table_prefix + key] = model;
+                    }
+                    if(model.getMeta('alias')){
+                        this._models[_deploy + '.' + model.getMeta('alias')] = this._serverContext._models[_deploy + '.' + model.getMeta('alias')] = model;
+                    }
+                    this._modelArray.push(model);
+                    this._models[_deploy + '.' + key] = this._serverContext._models[_deploy + '.' + key] = model;
+                    Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "modelLoaded", [key, model, this, serverContext]);
+                    Middleware.callMiddlewareMethod(Middleware.TYPES.MODEL, "loaded", [key, model, this, serverContext]);
+                }.bind(this));
+            }
+
+            if(config.controllers) {
+                zn.extend(this._controllers,  this.__loadPackages(config.controllers));
+            }
+
             this._routes = this.__initRoutes(this._controllers);
             this._formidable = this._serverContext.__initFileUploadConfig(this._config.formidable);
 

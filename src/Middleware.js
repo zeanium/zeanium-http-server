@@ -37,6 +37,7 @@ module.exports = zn.Class({
                 CLIENT_REQUEST: "CLIENT_REQUEST",
                 CONTROLLER: "CONTROLLER",
                 COOKIE: "COOKIE",
+                MODEL: "MODEL",
                 HTTP_SERVER: "HTTP_SERVER",
                 REQUEST: "REQUEST",
                 RESPONSE: "RESPONSE",

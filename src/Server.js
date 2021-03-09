@@ -29,7 +29,6 @@ module.exports = zn.Class({
             var _config = zn.deepAssigns({}, CONFIG, args);
             this._config = _config;
             this.__init(_config);
-            this.__loadMiddlewares(_config.middlewares);
             if(_config.auto){
                 this.start();
             }
@@ -39,7 +38,17 @@ module.exports = zn.Class({
         __init: function (_config){
             this._beginTimestamp = (new Date()).getTime();
             this.__initWatcher();
-            this.__loadMiddlewares(_config.middlewares);
+        },
+        __loadServerMiddlewares: function (middlewares){
+            var _middlewares = middlewares;
+            if(_middlewares){
+                if(typeof _middlewares == 'string'){
+                    if(node_fs.existsSync(node_path.join(process.cwd(), _middlewares))){
+                        _middlewares = require(node_path.join(process.cwd(), _middlewares));
+                    }
+                }
+                this.__loadMiddlewares(_middlewares);
+            }
         },
         watching: function (){
             if(this._config.mode != 'development') return;
@@ -67,6 +76,7 @@ module.exports = zn.Class({
         },
         start: function (config){
             var _config = zn.overwrite(config||{}, this._config);
+            this.__loadServerMiddlewares(_config.middlewares);
             this.__createServerContext(_config);
             this.__createHTTPServer(_config);
             Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER, "started", [_config, this]);
