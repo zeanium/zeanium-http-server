@@ -6,27 +6,29 @@ var DURATION = 60 * 60 * 24;
 module.exports = zn.Class({
     properties: {
         id: null,
+        key: null,
         isNew: null,
-        createdTime: null,
-        expiresTime: null,
-        lastAccessedTime: null,
         values: null,
         attributes: null,
-        expires: 0,
         cookies: null,
+        context: null,
+        expires: DURATION,
         interval: 30 * 1000,
-        context: null
+        createdTime: null,
+        expiresTime: null,
+        lastAccessedTime: null
     },
     methods: {
-        init: function (context){
+        init: function (props, context){
             this._values = {};
             this._attributes = {};
             this._cookies = [];
-            this._context = context;
+            this.sets(props);
             if(context){
-                this._cookies.push(context.getSessionKey());
+                this._context = context;
                 this._expires = (context._config.expires || DURATION) * 1000;
             }
+            
             Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "initial", [context, this]);
         },
         initialize: function (){
@@ -50,14 +52,14 @@ module.exports = zn.Class({
         getProps: function (){
             return {
                 id: this._id,
+                key: this._key,
                 isNew: this._isNew,
                 cookies: this._cookies,
-                createdTime: this._createdTime,
-                expiresTime: this._expiresTime,
-                lastAccessedTime: this._lastAccessedTime,
                 values: this._values,
                 attributes: this._attributes,
-                interval: this._interval,
+                createdTime: this._createdTime,
+                expiresTime: this._expiresTime,
+                lastAccessedTime: this._lastAccessedTime
             };
         },
         bindCookie: function (name){
@@ -74,15 +76,25 @@ module.exports = zn.Class({
 
             return this;
         },
-        setId: function (value){
-            if(value) {
-                this._id = value
+        setId: function (id){
+            if(id) {
+                this._id = id;
             }
 
             return this;
         },
         getId: function (){
             return this._id;
+        },
+        setKey: function (key){
+            if(key) {
+                this._key = key;
+            }
+
+            return this;
+        },
+        getKey: function (){
+            return this._key;
         },
         getCreatedTime: function (){
             return this._createdTime;
@@ -147,9 +159,13 @@ module.exports = zn.Class({
         getMaxInactiveInterval: function (){
             return this._interval;
         },
-        generateId: function (){
-            var _token = this._context.sign();
-            zn.trace('Session Token: ', _token);
+        generateId: function (key){
+            var _token = this._context.sign(key || this._key);
+            zn.trace('[ Session Token ]: ', {
+                id: _token,
+                key: this._key
+            });
+
             return Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "generateId", [_token, this]) || _token;
         },
         updateId: function (){
@@ -166,11 +182,12 @@ module.exports = zn.Class({
             this._isNew = false;
             this._lastAccessedTime = _date;
             this._expiresTime = Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "updateExpiresTime", [_time, this]) || _time;
+
             return this._expiresTime;
         },
         invalidate: function (){
             this._expiresTime = (new Date()).getTime() - 1;
-            this._context.removeSession(this._id);
+            this._context.removeSession(this);
             Middleware.callMiddlewareMethod(Middleware.TYPES.SESSION, "invalidate", [this]);
         },
         isNew: function (){

@@ -6,26 +6,25 @@ var node_jwt = require('jsonwebtoken');
 var Session = require('./Session');
 var SessionContext = zn.Class({
     properties: {
+        key: null,
         config: null,
-        current: null,
         serverContext: null
     },
     methods: {
         init: {
             auto: true,
             value: function (config, serverContext){
+                this._key = config.key ? config.key : this.constructor.getMeta('key');
                 this._config = config;
                 this._secret = this._config.secret || 'zeanium-http-server';
                 this._serverContext = serverContext;
             }
         },
-        getSessionKey: function (){
-            var _key = this._config.name;
-            if(!_key) {
-                _key = this.constructor.getMeta('sessionKey');
-            }
-
-            return _key;
+        setKey: function (key){
+            return this._key = key, this;
+        },
+        getKey: function (){
+            return this._key;
         },
         setServerContext: function (serverContext){
             return this._serverContext = serverContext, this;
@@ -33,42 +32,48 @@ var SessionContext = zn.Class({
         setConfig: function (config){
             return this._config = config, this;
         },
-        jwtSign: function (data, expiresIn, secret){
-            var _secret = secret || this._secret,
-                _expires = expiresIn || this._config.expires || 60 * 60 * 60 * 24;
+        jwtSign: function (data, secret, options, callback){
+            var _secret = secret || this._secret;
             return node_jwt.sign({
                 data: data
-            }, _secret, { 
-                expiresIn: _expires 
-            });
+            }, _secret, zn.extend({ 
+                expiresIn: this._config.expires || 60 * 60 * 60 * 24 
+            }, options), callback);
         },
-        jwtVerifyToken: function (token, secret){
-            return node_jwt.verify(token, secret || this._secret);
+        jwtVerifyToken: function (token, secret, options, callback){
+            return node_jwt.verify(token, secret || this._secret, zn.extend({ typ: 'JWT' }, options), callback);
         },
-        cryptoSign: function (data, secret){
-            var _secret = secret || this._secret,
-                _currDate = (new Date()).valueOf().toString(),
+        jwtDecode: function (token){
+            return node_jwt.decode(token);
+        },
+        cryptoSign: function (data, options){
+            var _options = zn.extend({ secret: this._secret }, options),
+                _nowstring = (new Date()).valueOf().toString(),
                 _random = Math.random().toString();
-            return node_crypto.createHash('sha1').update(_currDate + _random + _secret + (typeof data == 'object' ? JSON.stringify(data) : data.toString())).digest('hex');
+            return node_crypto.createHash('sha1').update(_nowstring + _random + _options.secret + (typeof data == 'object' ? JSON.stringify(data) : data.toString())).digest('hex');
         },
-        sign: function (data, expiresIn){
+        sign: function (data, options){
+            if(!data){
+                throw new Error('SessionContext sign method, the data is not exist.');
+            }
             var _token = '',
-                _type = this._config.signature || 'jwt',
-                _data = data || this.getSessionKey();
-            if(_type=='crypto_hash'){
-                _token = this.cryptoSign(_data);
-            }else if(_type == 'jwt'){
-                _token = this.jwtSign(_data, expiresIn);
+                _type = this._config.signature || 'jwt';
+            switch(_type) {
+                case 'crypto_hash':
+                    _token = this.cryptoSign(data, options);
+                    break;
+                case 'jwt':
+                    _token = this.jwtSign(data, options);
+                    break;
             }
 
             return _token;
         },
-        newSession: function (){
-            return this._current = new Session(this), this._current;
+        newSession: function (props){
+            return new Session(props, this);
         },
         createSession: function (props, callback){
-            var _session = this.newSession();
-            _session.setProps(props);
+            var _session = this.newSession(props);
             _session.initialize();
             return callback && callback(_session), _session;
         },
@@ -78,7 +83,7 @@ var SessionContext = zn.Class({
         getSession: function (sessionId){
             throw new Error("The Method Has's Implement.");
         },
-        removeSession: function (sessionId){
+        removeSession: function (session){
             throw new Error("The Method Has's Implement.");
         },
         updateSessionId: function (sessionId, success, error){
@@ -123,7 +128,7 @@ zn.SessionContext = function (){
 
     if(_args.length == 2){
         _meta = _args[1] || {};
-        _meta.sessionKey = _args[0];
+        _meta.key = _args[0];
     }
 
     return zn.Class(SessionContext, _meta);

@@ -22,25 +22,41 @@ module.exports = zn.Class({
                 request.clearFiles();
             });
         },
-        createSession: function (props, cookies, success, error){
-            return this._request.createSession(props, function (session){
-                var _sessionKey = this._request._serverContext._sessionContext.getSessionKey();
-                session.bindCookie(_sessionKey);
-                this.createCookie(_sessionKey, session.getId());
-                if(zn.is(cookies, 'object')){
-                    for(var key in cookies){
-                        session.bindCookie(key);
-                        this.createCookie(key, cookies[key]);
-                    }
-                }else if(zn.is(cookies, 'array')){
-                    for(var cookie of cookies){
-                        session.bindCookie(cookie.name);
-                        this.createCookie(cookie.name, cookie.value, cookie);
-                    }
+        createSession: function (argv, success){
+            var _sessionContext = this._request._serverContext._sessionContext;
+            if(!_sessionContext){
+                throw new Error('SessionContext is not exist!');
+            }
+            if(!argv){
+                throw new Error('createSession argv is not exist!');
+            }
+            if(argv.key){
+                _sessionContext.setKey(argv.key);
+            }
+            var _session = null,
+                _cookies = argv.cookies || {};
+            for(var _key in _cookies){
+                _cookies[_key] = _sessionContext.sign(_cookies[_key]);
+            }
+            if(argv.csrfToken) {
+                var _token = _sessionContext.sign(argv.csrfToken);
+                _cookies["CSRF-Token"] = _token;
+                this._serverResponse.setHeader("X-CSRF-Token", _token);
+            }
+
+            if(argv.props){
+                _session = _sessionContext.createSession(argv.props);
+                _cookies[_sessionContext.getKey()] = _session.getId();
+                for(var _key in _cookies){
+                    _session.bindCookie(_key);
+                    this.createCookie(_key, _cookies[_key]);
                 }
-                session.save();
-                success && success(session);
-            }.bind(this), error), this;
+
+                _session.save();
+                success && success(_session);
+            }
+
+            return _session;
         },
         invalidateSession: function (success, error){
             return this._request.getSession(function (session){
@@ -183,7 +199,7 @@ module.exports = zn.Class({
         },
         setCommonHeaders: function (){
             var _cookie = this.getCookiesValue();
-            if(_cookie) {
+            if(_cookie && _cookie.length) {
                 zn.info('[ Set-Cookie ]: ', _cookie);
                 this._serverResponse.setHeader('Set-Cookie', _cookie);
             }

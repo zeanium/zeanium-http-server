@@ -32,16 +32,21 @@ module.exports = zn.SessionContext('ZNSESSIONID_MEMORY', {
                 _session.save();
                 success && success(_session);
             }else{
-                error && error(null);
+                error && error(new zn.ERROR.HttpRequestError({
+                    code: 401,
+                    message: "401.1 Token失效",
+                    detail: "登录Token已经过期失效。"
+                }));
             }
 
             return this;
         },
-        removeSession: function (sessionId){
-            var _session = this._sessions[sessionId];
+        removeSession: function (session){
+            var _sessionId = session.getId();
+            var _session = this._sessions[_sessionId];
             if(_session){
-                this._sessions[sessionId] = null;
-                delete this._sessions[sessionId];
+                this._sessions[_sessionId] = null;
+                delete this._sessions[_sessionId];
             }
 
             return this;

@@ -26,6 +26,24 @@ module.exports = zn.Class({
         addClientRequestEventListener: function (event, listener, handler){
             return this._clientRequest.on.call(handler || this._clientRequest, event, listener), this;
         },
+        containCookies: function (names){
+            if(!names) return false;
+            var _size = names.length;
+            if(!_size){
+                return false;
+            }
+            for(var i = 0, _len = this._cookies.length;  i < _len; i++){
+                if(names.indexOf(this._cookies[i].name) != -1){
+                    _size = _size - 1;
+                }
+            }
+
+            if(_size){
+                return false;
+            }else{
+                return true;
+            }
+        },
         getCookie: function (name){
             if(!name) return;
             for(var i = 0, _len = this._cookies.length;  i < _len; i++){
@@ -55,8 +73,32 @@ module.exports = zn.Class({
                 }
             });
         },
+        xsrfTokenVerify: function (success, error){
+            var _token = this._clientRequest.headers["X-CSRF-Token"] || this.getCookie('CSRF-Token');
+            if(zn.isZNObject(_token)){
+                _token = _token.getValue();
+            }
+            if(!_token){
+                return error && error(new zn.ERROR.HttpRequestError({
+                    code: 401,
+                    message: "401.1 XSRFToken失效",
+                    detail: "登录XSRFToken已经过期失效。"
+                })), false;
+            }
+
+            var _value = this._serverContext._sessionContext.jwtVerifyToken(_token);
+            if(_value.exp > Date.now()){
+                return error && error(new zn.ERROR.HttpRequestError({
+                    code: 401,
+                    message: "401.1 XSRFToken失效",
+                    detail: "登录XSRFToken已经过期失效。"
+                })), false;
+            }else{
+                return success && success(_value.data), _value.data;
+            }
+        },
         sessionVerify: function (success, error){
-            this.getSession(null, function (session){
+            this.getSession(function (session){
                 var _cookies = Array.from(session._cookies || []);
                 var _cookie = this._clientRequest.headers.cookie || this._clientRequest.headers.Cookie||'',
                     _ary = null;
@@ -70,7 +112,7 @@ module.exports = zn.Class({
                 }
                 if(_cookies.length){
                     error && error(new zn.ERROR.HttpRequestError({
-                        code: 403,
+                        code: 401,
                         message: "会话验证错误",
                         detail: "请重新登录系统。"
                     }));
@@ -78,8 +120,8 @@ module.exports = zn.Class({
                     this._session = session;
                     success && success(session);
                 }
-            }.bind(this), function (){
-                error && error(new zn.ERROR.HttpRequestError({
+            }.bind(this), function (err){
+                error && error(err || new zn.ERROR.HttpRequestError({
                     code: 401,
                     message: "401.1 未经授权",
                     detail: "访问由于凭据无效被拒绝，请先登录系统。"
@@ -89,7 +131,7 @@ module.exports = zn.Class({
             return this;
         },
         hasSession: function (success, error){
-            return this.getSession(null, success, error), this;
+            return this.getSession(success, error), this;
         },
         hasSessionCookie: function (){
             return !!this.getCookie(this._serverContext._sessionContext.getSessionKey());
@@ -97,26 +139,16 @@ module.exports = zn.Class({
         getSessionConfig: function (){
             return this._serverContext._sessionContext.config;
         },
-        createSession: function (props, success, error){
-            if(props){
-                var _context = this._serverContext._sessionContext;
-                this._session = _context.createSession(props, success, error);
-            }
-
-            return this._session;
+        setSession: function (session){
+            return this._session = session, this;
         },
-        getSession: function (props, success, error){
+        getSession: function (success, error){
             var _context = this._serverContext._sessionContext;
-            var _cookie = this.getCookie(_context.getSessionKey());
+            var _cookie = this.getCookie(_context.getKey());
             if(_cookie){
                 _context.getSession(_cookie.getValue(), function (session){
-                    if(session){
-                        if(props){
-                            session.setProps(props);
-                        }
-                        this._session = session;
-                        success && success(session);
-                    }
+                    this._session = session;
+                    success && success(session);
                 }.bind(this), error);
             }else{
                 error && error();
