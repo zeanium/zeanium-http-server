@@ -83,6 +83,9 @@ var SessionContext = zn.Class({
         getSession: function (sessionId){
             throw new Error("The Method Has's Implement.");
         },
+        getSessionByKey: function (sessionKey){
+            throw new Error("The Method Has's Implement.");
+        },
         removeSession: function (session){
             throw new Error("The Method Has's Implement.");
         },

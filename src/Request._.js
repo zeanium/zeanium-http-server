@@ -74,7 +74,9 @@ module.exports = zn.Class({
             });
         },
         xsrfTokenVerify: function (success, error){
-            var _token = this._clientRequest.headers["X-CSRF-Token"] || this.getCookie('CSRF-Token');
+            console.log(this._clientRequest.headers);
+            var _token = this._clientRequest.headers["x-csrf-token"] || this.getCookie('CSRF-Token');
+            console.log('Token: ', _token);
             if(zn.isZNObject(_token)){
                 _token = _token.getValue();
             }
@@ -87,6 +89,7 @@ module.exports = zn.Class({
             }
 
             var _value = this._serverContext._sessionContext.jwtVerifyToken(_token);
+            zn.debug('CSRF-Token: ', _value);
             if(_value.exp > Date.now()){
                 return error && error(new zn.ERROR.HttpRequestError({
                     code: 401,
@@ -98,35 +101,44 @@ module.exports = zn.Class({
             }
         },
         sessionVerify: function (success, error){
-            this.getSession(function (session){
-                var _cookies = Array.from(session._cookies || []);
-                var _cookie = this._clientRequest.headers.cookie || this._clientRequest.headers.Cookie||'',
-                    _ary = null;
-                for(var item of _cookie.split(';')){
-                    if(item.trim()){
-                        _ary = item.trim().split('=');
-                        if(_cookies.indexOf(_ary[0].trim()) != -1){
-                            _cookies.splice(_cookies.indexOf(_ary[0].trim()), 1);
-                        }
-                    }
-                }
-                if(_cookies.length){
-                    error && error(new zn.ERROR.HttpRequestError({
-                        code: 401,
-                        message: "会话验证错误",
-                        detail: "请重新登录系统。"
-                    }));
-                }else{
+            var _key = this.xsrfTokenVerify();
+            console.log('Key: ', _key);
+            if(_key){
+                this._serverContext._sessionContext.getSessionByKey(_key, function (session){
                     this._session = session;
                     success && success(session);
-                }
-            }.bind(this), function (err){
-                error && error(err || new zn.ERROR.HttpRequestError({
-                    code: 401,
-                    message: "401.1 未经授权",
-                    detail: "访问由于凭据无效被拒绝，请先登录系统。"
-                }));
-            });
+                }.bind(this), error);
+            }else{
+                this.getSession(function (session){
+                    var _cookies = Array.from(session._cookies || []);
+                    var _cookie = this._clientRequest.headers.cookie || this._clientRequest.headers.Cookie||'',
+                        _ary = null;
+                    for(var item of _cookie.split(';')){
+                        if(item.trim()){
+                            _ary = item.trim().split('=');
+                            if(_cookies.indexOf(_ary[0].trim()) != -1){
+                                _cookies.splice(_cookies.indexOf(_ary[0].trim()), 1);
+                            }
+                        }
+                    }
+                    if(_cookies.length){
+                        error && error(new zn.ERROR.HttpRequestError({
+                            code: 401,
+                            message: "会话验证错误",
+                            detail: "请重新登录系统。"
+                        }));
+                    }else{
+                        this._session = session;
+                        success && success(session);
+                    }
+                }.bind(this), function (err){
+                    error && error(err || new zn.ERROR.HttpRequestError({
+                        code: 405,
+                        message: "401.1 未经授权",
+                        detail: "访问由于凭据无效被拒绝，请先登录系统。"
+                    }));
+                });
+            }
 
             return this;
         },
