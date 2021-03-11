@@ -184,6 +184,7 @@ module.exports = zn.Class({
         setCommonHeaders: function (){
             var _cookie = this.getCookiesValue();
             if(_cookie) {
+                zn.info('[ Set-Cookie ]: ', _cookie);
                 this._serverResponse.setHeader('Set-Cookie', _cookie);
             }
 

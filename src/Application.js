@@ -66,6 +66,7 @@ module.exports = zn.Class({
 
             if(config.models) {
                 this.__loadPackages(config.models, function (key, model){
+                    model = Middleware.callMiddlewareMethod(Middleware.TYPES.MODEL, "load", [key, model, this, serverContext]) || model;
                     model.setMeta('application', _deploy);
                     if(config.table_prefix){
                         model.setMeta('tablePrefix', config.table_prefix);
