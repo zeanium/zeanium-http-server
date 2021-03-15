@@ -47,6 +47,16 @@ module.exports = zn.Class({
         resolveModel: function (modelName){
             return this._models[modelName] || this._models[config.deploy + '.' + modelName];
         },
+        registerModelSql: function (key, modelSql){
+            if(!this._Sql) {
+                this._Sql = {};
+            }
+
+            return this._Sql[key] = modelSql, modelSql;
+        },
+        resolveModelSql: function (key){
+            return this._Sql[key];
+        },
         __initial: function (config, serverContext){
             var _deploy = config.deploy;
             this._Sql = {};

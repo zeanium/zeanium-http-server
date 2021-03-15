@@ -1,6 +1,6 @@
 {
   "name": "@zeanium/http-server",
-  "version": "1.4.9",
+  "version": "1.4.10",
   "description": "zeanium http server module",
   "main": "index.js",
   "repository": {

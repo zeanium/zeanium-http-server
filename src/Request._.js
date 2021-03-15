@@ -74,9 +74,7 @@ module.exports = zn.Class({
             });
         },
         xsrfTokenVerify: function (success, error){
-            console.log(this._clientRequest.headers);
             var _token = this._clientRequest.headers["x-csrf-token"] || this.getCookie('CSRF-Token');
-            console.log('Token: ', _token);
             if(zn.isZNObject(_token)){
                 _token = _token.getValue();
             }
@@ -102,7 +100,6 @@ module.exports = zn.Class({
         },
         sessionVerify: function (success, error){
             var _key = this.xsrfTokenVerify();
-            console.log('Key: ', _key);
             if(_key){
                 this._serverContext._sessionContext.getSessionByKey(_key, function (session){
                     this._session = session;
