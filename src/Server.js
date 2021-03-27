@@ -142,8 +142,11 @@ module.exports = zn.Class({
         },
         __createClusterServer: function (config){
             if(node_cluster.isMaster){
-                zn.info("Main Process " + process.pid + " Running ...");
-                var _cpus = config.clusters || node_os.cpus().length;
+                var _cpus = config.clusters;
+                if(_cpus === true){
+                    _cpus = node_os.cpus().length
+                }
+                zn.info("Master [" + process.pid + "]: ", _cpus, node_os.cpus().length);
                 for(var i = 0; i < _cpus; i++){
                     node_cluster.fork();
                 }
@@ -151,7 +154,7 @@ module.exports = zn.Class({
                     zn.error("Work Process " + worker.process.pid + " Exited.");
                 });
             } else {
-                zn.info("Child Process " + process.pid + " Running ...");
+                zn.info("Worker [" + process.pid + "]: " + node_cluster.worker.id);
                 this._server = this.__createSimpleServer(config);
             }
         },
