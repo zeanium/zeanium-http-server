@@ -197,7 +197,7 @@ module.exports = zn.Class({
             return this;
         },
         __parseFormData: function (clientRequest, callback){
-            var _contentType = clientRequest.headers['content-type'] || '';
+            var _contentType = (clientRequest.headers['content-type'] || '').toLocaleLowerCase();
             if(_contentType.indexOf('/xml') != -1) {
                 var _parser = new xml2js.Parser({
                     async: false,
@@ -234,7 +234,7 @@ module.exports = zn.Class({
                         });
                     }
                 });
-            }else{
+            } else {
                 var _incomingForm = new formidable.IncomingForm(),
                 _config = zn.extend(this.application ? this.application.formidable : this.serverContext.formidable);
                 zn.extend(_incomingForm, _config);
