@@ -230,6 +230,7 @@ module.exports = zn.Class({
                     }else{
                         _parser.parseString(_data, function (err, data){
                             _parseValue = data.xml;
+                            clientRequest.rawBody = _data;
                             callback && callback(err, _parseValue);
                         });
                     }
