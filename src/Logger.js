@@ -3,106 +3,102 @@
  */
 var node_path = require('path');
 var node_fs = require('fs');
-
+var FileWriter = require('./FileWriter');
 var _slice = Array.prototype.slice;
 
-module.exports = zn.Class({
+module.exports = zn.Class(FileWriter, {
+    events: [ 'error', 'route', 'request', 'requestcount', 'requeststatus' ],
     properties: {
-        config: null,
-        context: null
+        paths: null
     },
     methods: {
-        init: function (config, context){
-            this._config = zn.extend({ 
-                dir: './log/',
-                request: 'request.log',
-                error: 'error.log',
-                route: 'route.log'
-            }, config);
-            this._context = context;
-            this._dir = node_path.resolve(process.cwd(), this._config.dir);
-            if(!node_fs.existsSync(this._dir)){
-                node_fs.mkdirSync(this._dir, { recursive: true });
+        init: function (argv, events){
+            this.super(argv);
+            this._paths = zn.extend({
+                error: 'zeanium.error.log',
+                route: 'zeanium.route.log',
+                request: 'zeanium.request.log',
+                requestcount: 'zeanium.requestcount.json',
+                requeststatus: 'zeanium.requeststatus.json'
+            }, argv.paths);
+            if(events && zn.is(events, 'object')){
+                for(var key in events) {
+                    this.on(key, events[key]);
+                }
             }
         },
-        __getNowDayString__: function (){
-            var _now = new Date();
-            return (_now.getFullYear() + '_' + (_now.getMonth() + 1) + '_' + _now.getDate());
-        },
-        writeRequest: function (){
-            var _path = node_path.join(this._dir, '/' + this.__getNowDayString__() + '/'),
-                _file = node_path.join(_path, (this._config.request || 'request.log')),
-                _content = _slice.call(arguments).join(' ') + '\n';
-            if(!node_fs.existsSync(_path)){
-                node_fs.mkdirSync(_path, { recursive: true });
+        resolveDirPath: function (year, month, date){
+            var _paths = [];
+            if(year){
+                _paths.push(year);
             }
-            if(!node_fs.existsSync(_file)){
-                node_fs.writeFileSync(_file, _content);
-            }else{
-                node_fs.appendFileSync(_file, _content);
+            if(month){
+                _paths.push(month);
+            }
+            if(date){
+                _paths.push(date);
             }
 
-            return this;
+            var _path = node_path.join(this.dir, '/' + _paths.join(this.separator || '/') + '/');
+            if(node_fs.existsSync(_path)){
+                return _path;
+            }
+
+            return '';
+        },
+        resolveModuleDirPath: function (year, month, date, module){
+            var _paths = [];
+            if(year){
+                _paths.push(year);
+            }
+            if(month){
+                _paths.push(month);
+            }
+            if(date){
+                _paths.push(date);
+            }
+
+            var _path = node_path.join(this.dir, '/' + _paths.join(this.separator || '/') + '/', this._paths[module||'']);
+            if(node_fs.existsSync(_path)){
+                return _path;
+            }
+
+            return '';
         },
         writeError: function (){
-            var _path = node_path.join(this._dir, '/' + this.__getNowDayString__() + '/'),
-                _file = node_path.join(_path, (this._config.error || 'error.log')),
-                _content = _slice.call(arguments).join(' ') + '\n';
-            if(!node_fs.existsSync(_path)){
-                node_fs.mkdirSync(_path, { recursive: true });
-            }
-            if(!node_fs.existsSync(_file)){
-                node_fs.writeFileSync(_file, _content);
-            }else{
-                node_fs.appendFileSync(_file, _content);
-            }
-
-            return this;
+            var _value = _slice.call(arguments).join(' ');
+            this.fire('error', _value);
+            return this.appendText(this._paths.error, _value, true), this;
         },
         writeRoute: function (){
-            var _path = node_path.join(this._dir, '/' + this.__getNowDayString__() + '/'),
-                _file = node_path.join(_path, (this._config.route || 'route.log')),
-                _content = _slice.call(arguments).join(' ') + '\n';
-            if(!node_fs.existsSync(_path)){
-                node_fs.mkdirSync(_path, { recursive: true });
-            }
-            if(!node_fs.existsSync(_file)){
-                node_fs.writeFileSync(_file, _content);
-            }else{
-                node_fs.appendFileSync(_file, _content);
-            }
-
-            return this;
+            var _value = _slice.call(arguments).join(' ');
+            this.fire('route', _value);
+            return this.appendText(this._paths.route, _value, true), this;
+        },
+        writeRequest: function (){
+            var _value = _slice.call(arguments).join(' ');
+            this.fire('request', _value);
+            return this.appendText(this._paths.request, _value, true), this;
         },
         requestCount: function (path){
-            var _path = node_path.join(this._dir, '/' + this.__getNowDayString__() + '/'),
-                _file = node_path.join(_path, 'request.count.json'),
-                _content = {};
-            if(!node_fs.existsSync(_path)){
-                node_fs.mkdirSync(_path, { recursive: true });
+            var _filePath = this.getFilePath(this._paths.requestcount), _json = {};
+            if(node_fs.existsSync(_filePath)){
+                _json = require(_filePath);
             }
-            if(node_fs.existsSync(_file)){
-                _content = require(_file);
-            }
+            _json[path] = (_json[path] || 0) + 1;
 
-            _content[path] = (_content[path] || 0) + 1;
-            node_fs.writeFileSync(_file, JSON.stringify(_content, null, 4));
-            return this;
+            this.fire('requestcount', _json);
+            return this.writeJSONFilePath(_filePath, _json), this;
         },
         requestStatus: function (path, status){
-            var _path = node_path.join(this._dir, '/' + this.__getNowDayString__() + '/'),
-                _file = node_path.join(_path, 'request.status.json'),
-                _content = {};
-            if(!node_fs.existsSync(_path)){
-                node_fs.mkdirSync(_path, { recursive: true });
+            var _filePath = this.getFilePath(this._paths.requeststatus), _json = {};
+            if(node_fs.existsSync(_filePath)){
+                _json = require(_filePath);
             }
-            if(node_fs.existsSync(_file)){
-                _content = require(_file);
-            }
+            _json[path] = status;
 
-            _content[path] = status;
-            node_fs.writeFileSync(_file, JSON.stringify(_content, null, 4));
-            return this;
+            this.fire('requeststatus', _json);
+            return this.writeJSONFilePath(_filePath, _json), this;
         }
     }
 });

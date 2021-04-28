@@ -7,5 +7,6 @@ module.exports = {
     middleware: require('./middleware/_index.js'),
     Controller: require('./Controller.js'),
     ControllerService: require('./ControllerService.js'),
+    FileWriter: require('./FileWriter.js'),
     Server: require('./Server.js')
 }

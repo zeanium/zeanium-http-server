@@ -285,7 +285,9 @@ module.exports = zn.Class({
 
             if(_folder) {
                 _savedDir = node_path.join(_savedDir, _folder);
-                _folder = '/' + _folder;
+                if(_folder.charAt(0) != '/') {
+                    _folder = '/' + _folder;
+                }
             }
             this._serverContext.__initPath(_savedDir);
             var _savedPath = node_path.join(_savedDir, _name + _ext),
@@ -299,7 +301,7 @@ module.exports = zn.Class({
                     savedName: _name + _ext,
                     savedDir: _config.savedDir,
                     savedPath: _savedPath,
-                    path: _folder + '/' + _name + _ext,
+                    path: node_path.join(_folder, _name + _ext),
                     lastModifiedDate: file.lastModifiedDate.toISOString()
                 };
 

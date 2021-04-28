@@ -41,7 +41,7 @@ module.exports = zn.Class({
             this._server = server;
             this._path = __dirname;
             this._models = {};
-            this._logger = new Logger(config.log, this);
+            this.initLogger(config.log);
             this._url = this.__parseURL(config.host, config.port);
             this._root = node_path.resolve(process.cwd(), (config.root || './'));
             this._webRoot = node_path.resolve(process.cwd(), (config.web_root || './'));
@@ -55,6 +55,25 @@ module.exports = zn.Class({
             this.__deploy();
             this.__loadingCompleted();
             Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "initial", [config, server, this]);
+        },
+        initLogger: function (logConfig){
+            this._logger = new Logger(logConfig, {
+                error: function (sender, value){
+                    Middleware.callMiddlewareMethod(Middleware.TYPES.LOGGER, "error", [value, sender, this]);
+                },
+                route: function (sender, value){
+                    Middleware.callMiddlewareMethod(Middleware.TYPES.LOGGER, "route", [value, sender, this]);
+                },
+                request: function (sender, value){
+                    Middleware.callMiddlewareMethod(Middleware.TYPES.LOGGER, "request", [value, sender, this]);
+                },
+                requestcount: function (sender, value){
+                    Middleware.callMiddlewareMethod(Middleware.TYPES.LOGGER, "requestcount", [value, sender, this]);
+                },
+                requeststatus: function (sender, value){
+                    Middleware.callMiddlewareMethod(Middleware.TYPES.LOGGER, "requeststatus", [value, sender, this]);
+                }
+            });
         },
         resolveModel: function (modelName){
             return this._models[modelName];

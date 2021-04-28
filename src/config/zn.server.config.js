@@ -14,10 +14,7 @@ module.exports = {
     port: 8888,
     cwd: '/',
     log: {
-        dir: './log/',
-        file: 'output.log',
-        error: 'error.log',
-        route: 'route.log'
+        dir: './log/'
     },
     restart: {
         timeout: 5000,
