@@ -100,6 +100,7 @@ module.exports = zn.Class({
         },
         sessionVerify: function (success, error){
             var _key = this.xsrfTokenVerify();
+            zn.debug('Request sessionVerify SessionKey: ', _key);
             if(_key){
                 this._serverContext._sessionContext.getSessionByKey(_key, function (session){
                     this._session = session;

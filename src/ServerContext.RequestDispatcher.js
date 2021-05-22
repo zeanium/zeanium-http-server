@@ -199,7 +199,7 @@ module.exports = zn.Class({
                 return;
             }
             if(!err){
-                err = new new zn.ERROR.HttpRequestError({
+                err = new zn.ERROR.HttpRequestError({
                     code: 501,
                     message: "抛错误异常",
                     detail: "错误不存在。"

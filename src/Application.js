@@ -35,7 +35,14 @@ module.exports = zn.Class({
             }
             this.__initial(_config, serverContext);
             serverContext.registerApplication(this);
-            zn.info("Application[ ", config.deploy, " ] Loaded.");
+
+            var _version = '';
+            if(node_fs.existsSync(node_path.join(config.root, './package.json'))){
+                this._package = require(node_path.join(config.root, './package.json'));
+                _version = this._package.version;
+            }
+
+            zn.info("Application[ ", config.deploy, ':', _version, " ] Loaded.");
             Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "loaded", [this, config, serverContext]);
         },
         existPath: function (path){

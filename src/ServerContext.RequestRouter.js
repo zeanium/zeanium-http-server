@@ -65,7 +65,7 @@ module.exports = zn.Class({
                         if(!this.__validateRouteMeta(_meta, request, response)) return;
                         _controller[_action].apply(_controller, _argv);
                     }, (err)=>{
-                        this.doHttpError(request.clientRequest, response.serverResponse, err)
+                        this.doHttpError(request.clientRequest, response.serverResponse, err);
                     });
                 }
                 
