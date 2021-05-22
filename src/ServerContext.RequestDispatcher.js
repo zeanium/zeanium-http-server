@@ -200,9 +200,9 @@ module.exports = zn.Class({
             }
             if(!err){
                 err = new zn.ERROR.HttpRequestError({
-                    code: 501,
-                    message: "抛错误异常",
-                    detail: "错误不存在。"
+                    code: 401,
+                    message: "Session过期",
+                    detail: "Session过期，需重新登录。"
                 });
             }
             this._logger.writeError(zn.date.asString(new Date()), 'Error [', err.name, err.code, err.message, ']', err.detail, err.stack);
