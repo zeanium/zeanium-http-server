@@ -85,27 +85,34 @@ module.exports = zn.Class({
             this._apps[application.config.deploy] = application;
             return this._routes = this._routes.concat(application.routes), this;
         },
+        __initSessionContext: function (){
+            this.registerSessionContext();
+        },
         registerSessionContext: function (sessionContext){
-            if(sessionContext) {
-                sessionContext.setServerContext(this);
+            if(sessionContext){
+                this._sessionContext = sessionContext;
+                this._sessionContext.setServerContext(this);
+                return this;
             }
-
-            return this._sessionContext = Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "registerSessionContext", [sessionContext, this]) || sessionContext, this;
+            var _sessionContext = Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "registerSessionContext", [this]);
+            if(!_sessionContext) {
+                var _config = this._config.session;
+                if(_config){
+                    var _Context = _config.context || MemorySessionContext;
+                    _sessionContext = new _Context(_config, this);
+                }
+            }
+            if(_sessionContext) {
+                this._sessionContext = _sessionContext;
+                this._sessionContext.setServerContext(this);
+            }
+            
+            return this;
         },
         __initial: function (config){
             this._apps = {};
             this._routes = [];
             this._modules = this.__loadPackages(config.modules);
-        },
-        __initSessionContext: function (){
-            var _config = this._config.session,
-                _context = null;
-            if(_config){
-                var _Context = _config.context || MemorySessionContext;
-                _context = new _Context(_config, this);
-            }
-
-            this.registerSessionContext(_context);
         },
         __loadingCompleted: function (){
             var _timestamp = (new Date()).getTime() - this._server._beginTimestamp,

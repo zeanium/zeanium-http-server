@@ -1,11 +1,10 @@
 /**
  * Created by yangyxu on 7/14/15.
  */
-module.exports = zn.SessionContext('ZNSESSIONID_MEMORY', {
+module.exports = zn.SessionContext('ZNSession-Memory', {
     methods: {
         init: function (config, serverContext){
             this._sessions = {};
-            this.super(config, serverContext);
         },
         cleanUp: function (){
             var _sessions = this._sessions,

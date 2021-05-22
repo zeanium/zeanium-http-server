@@ -7,7 +7,7 @@ module.exports = zn.Class({
     properties: {
         id: null,
         key: null,
-        isNew: null,
+        isNew: true,
         values: null,
         attributes: null,
         cookies: null,

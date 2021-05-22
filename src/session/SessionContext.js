@@ -15,6 +15,7 @@ var SessionContext = zn.Class({
             auto: true,
             value: function (config, serverContext){
                 this._key = config.key ? config.key : this.constructor.getMeta('key');
+                zn.error('SessionContext Key: ', this._key);
                 this._config = config;
                 this._secret = this._config.secret || 'zeanium-http-server';
                 this._serverContext = serverContext;

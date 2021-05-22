@@ -30,11 +30,15 @@ module.exports = zn.Class({
             if(!argv){
                 throw new Error('createSession argv is not exist!');
             }
+            
             if(argv.key){
-                _sessionContext.setKey(argv.key);
+                _sessionContext._key = argv.key;
             }
             var _session = null,
+                _sessionKey = _sessionContext._key,
                 _cookies = argv.cookies || {};
+
+            zn.debug('Session Key: ', _sessionKey);
             for(var _key in _cookies){
                 _cookies[_key] = _sessionContext.sign(_cookies[_key]);
             }
@@ -46,12 +50,11 @@ module.exports = zn.Class({
 
             if(argv.props){
                 _session = _sessionContext.createSession(argv.props);
-                _cookies[_sessionContext.getKey()] = _session.getId();
+                _cookies[_sessionKey] = _session.getId();
                 for(var _key in _cookies){
                     _session.bindCookie(_key);
                     this.createCookie(_key, _cookies[_key]);
                 }
-
                 _session.save();
                 success && success(_session);
             }
