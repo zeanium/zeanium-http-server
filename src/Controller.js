@@ -68,7 +68,7 @@ zn.Controller = function (){
     _meta.controller = _name;
     Middleware.callMiddlewareMethod(Middleware.TYPES.CONTROLLER, "define", [_name, _meta]);
     
-    return zn.Class(_name, Controller, _meta);
+    return zn.Class(Controller, _meta);
 }
 
 module.exports = Controller;

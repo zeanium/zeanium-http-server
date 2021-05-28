@@ -42,6 +42,7 @@ module.exports = zn.Class({
                 MODEL: "MODEL",
                 REQUEST: "REQUEST",
                 RESPONSE: "RESPONSE",
+                SERVICE: "SERVICE",
                 SERVER: "SERVER",
                 SERVER_CONTEXT: "SERVER_CONTEXT",
                 SERVER_RESPONSE: "SERVER_RESPONSE",

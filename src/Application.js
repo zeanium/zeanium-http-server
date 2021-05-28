@@ -15,6 +15,7 @@ module.exports = zn.Class({
         controllers: null,
         R: null,
         Sql: null,
+        services: null,
         models: null,
         modules: null,
         routes: null,
@@ -41,7 +42,19 @@ module.exports = zn.Class({
                 this._package = require(node_path.join(config.root, './package.json'));
                 _version = this._package.version;
             }
-
+            if(config.deploy){
+                zn.path(zn.GLOBAL, config.deploy, {
+                    config: this._config,
+                    controllers: this._controllers,
+                    R: this._R,
+                    services: this._services,
+                    models: this._models,
+                    modules: this._modules,
+                    routes: this._routes,
+                    root: this._root,
+                    webRoot: this._webRoot
+                });
+            }
             zn.info("Application[ ", config.deploy, ':', _version, " ] Loaded.");
             Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "loaded", [this, config, serverContext]);
         },
@@ -79,6 +92,10 @@ module.exports = zn.Class({
 
             if(config.middlewares) {
                 this.__loadMiddlewares(config.middlewares);
+            }
+
+            if(config.services){
+                this._services = this.__loadServices(config.services);
             }
 
             if(config.models) {
@@ -155,6 +172,33 @@ module.exports = zn.Class({
             }
 
             return this;
+        },
+        __loadServices: function (paths){
+            var _services = {}, _this = this;
+            if(paths){
+                var _root = this._config.root;
+
+                if(typeof paths == 'string'){
+                    paths = [paths];
+                }
+
+                paths.forEach(function (path){
+                    if(node_fs.existsSync(node_path.join(_root, path))) {
+                        var _name = null;
+                        var _Service = null;
+                        var _Services = require(node_path.join(_root, path));
+                        for(var key in _Services){
+                            _Service = _Services[key];
+                            _name = _Service.getMeta('service') || key;
+                            _services[_name] = new _Service(_this._serverContext, _this);
+                        }
+                    }
+                });
+            }
+
+            console.log(Object.keys(_services));
+
+            return _services;
         },
         __loadPackages: function (paths, callback){
             var _exports = {},

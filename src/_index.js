@@ -8,5 +8,6 @@ module.exports = {
     Controller: require('./Controller.js'),
     ControllerService: require('./ControllerService.js'),
     FileWriter: require('./FileWriter.js'),
-    Server: require('./Server.js')
+    Server: require('./Server.js'),
+    Service: require('./Service.js')
 }
