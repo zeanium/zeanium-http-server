@@ -34,6 +34,16 @@ module.exports = zn.Class({
             this._controllers = {
                 '__$__': ApplicationController
             }
+
+            if(config.deploy){
+                zn.path(zn.GLOBAL, config.deploy, {
+                    deploy: config.deploy,
+                    config: this._config,
+                    root: this._root,
+                    webRoot: this._webRoot
+                });
+            }
+
             this.__initial(_config, serverContext);
             serverContext.registerApplication(this);
 
@@ -42,21 +52,11 @@ module.exports = zn.Class({
                 this._package = require(node_path.join(config.root, './package.json'));
                 _version = this._package.version;
             }
-            if(config.deploy){
-                zn.path(zn.GLOBAL, config.deploy, {
-                    config: this._config,
-                    controllers: this._controllers,
-                    R: this._R,
-                    services: this._services,
-                    models: this._models,
-                    modules: this._modules,
-                    routes: this._routes,
-                    root: this._root,
-                    webRoot: this._webRoot
-                });
-            }
             zn.info("Application[ ", config.deploy, ':', _version, " ] Loaded.");
             Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "loaded", [this, config, serverContext]);
+        },
+        setGlobalValue: function (key, value){
+            return zn.path(zn.GLOBAL, this._config.deploy + '.' + key, value), this;
         },
         existPath: function (path){
             return node_fs.existsSync(node_path.join(this._webRoot, path));
@@ -82,20 +82,12 @@ module.exports = zn.Class({
             this._Sql = {};
             this._models = {};
             this._modelArray = [];
-            if(config.R){
-                this._R = this.__loadPackages(config.R);
-            }
-
             if(config.modules) {
                 this.__initModules(config.modules);
             }
 
             if(config.middlewares) {
                 this.__loadMiddlewares(config.middlewares);
-            }
-
-            if(config.services){
-                this._services = this.__loadServices(config.services);
             }
 
             if(config.models) {
@@ -111,16 +103,29 @@ module.exports = zn.Class({
                     }
                     this._modelArray.push(model);
                     this._models[_deploy + '.' + key] = this._serverContext._models[_deploy + '.' + key] = model;
+                    this.setGlobalValue('models', this._models);
                     Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "modelLoaded", [key, model, this, serverContext]);
                     Middleware.callMiddlewareMethod(Middleware.TYPES.MODEL, "loaded", [key, model, this, serverContext]);
                 }.bind(this));
             }
 
+            if(config.R){
+                this._R = this.__loadPackages(config.R);
+                this.setGlobalValue('R', this._R);
+            }
+
             if(config.controllers) {
                 zn.extend(this._controllers,  this.__loadPackages(config.controllers));
+                this.setGlobalValue('controllers', this._controllers);
+            }
+            
+            if(config.services){
+                this._services = this.__loadServices(config.services);
+                this.setGlobalValue('services', this._services);
             }
 
             this._routes = this.__initRoutes(this._controllers);
+            this.setGlobalValue('routes', this._routes);
             this._formidable = this._serverContext.__initFileUploadConfig(this._config.formidable);
 
             Middleware.callMiddlewareMethod(Middleware.TYPES.APPLICATION, "initial", [this, config, serverContext]);
@@ -139,6 +144,7 @@ module.exports = zn.Class({
                     zn.path(global, key, this._modules[key]);
                 }
             }
+            this.setGlobalValue('modules', this._modules);
         },
         __initRoutes: function (controllers){
             var _routes = [];
@@ -195,8 +201,6 @@ module.exports = zn.Class({
                     }
                 });
             }
-
-            console.log(Object.keys(_services));
 
             return _services;
         },
