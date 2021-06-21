@@ -236,10 +236,8 @@ module.exports = zn.Class({
                     }
                 });
             } else {
-                var _incomingForm = new formidable.IncomingForm(),
-                _config = zn.extend(this.application ? this.application.formidable : this.serverContext.formidable);
-                zn.extend(_incomingForm, _config);
-                
+                var _incomingForm = new formidable.IncomingForm();
+                zn.extend(_incomingForm, this.getFormidableConfig());
                 return _incomingForm.parse(clientRequest, callback), _incomingForm;
             }
         },

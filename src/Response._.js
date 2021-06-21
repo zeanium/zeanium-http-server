@@ -23,6 +23,11 @@ module.exports = zn.Class({
             });
         },
         createSession: function (argv, success){
+            if(this._serverResponse.finished){
+                success && success();
+                return zn.error('serverResponse has finished.'), false;
+            }
+
             var _sessionContext = this._request._serverContext._sessionContext;
             if(!_sessionContext){
                 throw new Error('SessionContext is not exist!');

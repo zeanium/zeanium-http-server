@@ -1,6 +1,8 @@
 /**
  * Created by yangyxu on 8/20/14.
  */
+var node_path = require('path');
+var node_fs = require('fs');
 var RequestReader = require('./Request.Reader');
 var Cookie = require('./Cookie');
 
@@ -11,14 +13,59 @@ module.exports = zn.Class({
         clientRequest: null,
         serverContext: null,
         session: null,
-        cookies: null
+        cookies: null,
+        formidableConfig: null
     },
     methods: {
         init: function (clientRequest, application, serverContext){
             this._clientRequest = clientRequest;
             this._application = application,
             this._serverContext = serverContext;
+            this._formidableConfig = this._application ? this._application.formidable : this._serverContext.formidable;
             this.__initCookie();
+        },
+        getFormidableConfig: function (){
+            return this._formidableConfig;
+        },
+        readSavedFileContent: function (){
+            var _data = {};
+            var _savedConfig = this._formidableConfig;
+            var _savedJSONPath = node_path.resolve(_savedConfig.webRoot, _savedConfig.savedMapping);
+            if(node_fs.existsSync(_savedJSONPath)){
+                _data = require(_savedJSONPath);
+            }
+
+            return _data;
+        },
+        getSavedFilByKey: function (fileKey){
+            if(!fileKey) return;
+            var _data = this.readSavedFileContent() || {};
+            var _path = _data[fileKey];
+            if(!_path) return;
+            var _ext = node_path.extname(_path);
+
+            return {
+                key: fileKey,
+                path: _path,
+                ext: _ext
+            };
+        },
+        getSavedFilesByKeys: function (fileKeys){
+            if(!fileKeys) return;
+            var _data = this.readSavedFileContent() || [],
+                _return  = [];
+
+            fileKeys.map(function (key){
+                if(key && _data[key]) {
+                    _return.push({
+                        key: key,
+                        path: _data[key],
+                        ext: node_path.extname(_data[key])
+                    });
+                }
+            });
+
+            return _return;
         },
         getContextPath: function (){
             return this._serverContext._webRoot;
