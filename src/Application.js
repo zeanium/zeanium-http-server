@@ -196,7 +196,9 @@ module.exports = zn.Class({
                         for(var key in _Services){
                             _Service = _Services[key];
                             _name = _Service.getMeta('service') || key;
-                            _services[_name] = new _Service(_this._serverContext, _this);
+                            if(_name){
+                                zn.path(_services, _name, new _Service(_this._serverContext, _this));
+                            }
                         }
                     }
                 });
