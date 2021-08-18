@@ -355,6 +355,27 @@ module.exports = zn.Class({
                     return ip;
                 }
             }
+        },
+        formatSpecialCharacter: function (str){
+            if(typeof str == 'string'){
+                return str.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, '&apos;');
+            }
+            /*
+            if(typeof str == 'string'){
+                return str.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+            }*/
+
+            if(typeof str == 'object'){
+                for(var key in str){
+                    str[key] = this.formatSpecialCharacter(str[key]);
+                }
+            }
+
+            return str;
+        },
+        unFormatSpecialCharacter: function (str){
+            return str.toString().replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&apos;/g, "'");
+            //return str.toString().replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
         }
     }
 });

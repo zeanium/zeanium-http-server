@@ -85,6 +85,14 @@ module.exports = zn.Class({
                 this.write(detail, encoding);
             }
             return this.end(), this;
+        },
+        downloadExcel: function (filename, xlsx){
+            this.setCommonHeaders();
+            this.writeHead(200, {
+                "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                'Content-disposition': 'attachment; filename=' + encodeURI(filename) + '.xlsx'
+            });
+            xlsx.generate(this._serverResponse);
         }
     }
 });

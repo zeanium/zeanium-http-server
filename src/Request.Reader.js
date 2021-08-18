@@ -164,18 +164,22 @@ module.exports = zn.Class({
         parseServerRequestQueryString: function (clientRequest){
             var _query = clientRequest.meta.query;
             for(var _key in _query){
-                this._$get[_key] = _query[_key];
+                this._$get[_key] = this._serverContext.formatSpecialCharacter(_query[_key]);
             }
             
             return this;
         },
         parseServerRequestFromData: function (clientRequest, callback){
+            var _serverContext = this._serverContext;
             if(clientRequest.parent && this._parsed){
                 return callback && callback(null, this._$post, this._$files), false;
             }
             
             this.__parseFormData(clientRequest, function(err, fields, files){
                 if(!err){
+                    for(var key in fields){
+                        fields[key] = _serverContext.formatSpecialCharacter(fields[key]);
+                    }
                     this._$post = fields;
                     this._$files = files;
                     this._parsed = true;

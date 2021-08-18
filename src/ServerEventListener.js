@@ -51,7 +51,7 @@ module.exports = zn.Class({
                     return this.__handlerOptionsMethod(clientRequest, serverResponse), false;
                 }
                 var _return = Middleware.callMiddlewareMethod(MIDDLEWARE_KEY, "request", [clientRequest, serverResponse, this._server]);
-                if(_return !== false){
+                if(_return !== false && this._server._context){
                     this._server._context.accept(clientRequest, serverResponse);
                 }
             } catch (err){
