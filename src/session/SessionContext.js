@@ -70,8 +70,9 @@ var SessionContext = zn.Class({
 
             return _token;
         },
-        newSession: function (props){
-            return new Session(props, this);
+        newSession: function (props, SessionClass){
+            var _SessionClass = SessionClass || Session;
+            return new _SessionClass(props, this);
         },
         createSession: function (props, callback){
             var _session = this.newSession(props);

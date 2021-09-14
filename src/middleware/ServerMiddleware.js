@@ -7,6 +7,9 @@ var ServerMiddleware = zn.Middleware({
         initial: function (config, server){
             
         },
+        start: function (config, server){
+            
+        },
         started: function (config, server){
             
         }

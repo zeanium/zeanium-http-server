@@ -51,6 +51,19 @@ module.exports = zn.Class({
             };
             this.data = {};
         },
+        reset: function (){
+            for(var key in this.data){
+                var _temps = [];
+                for(var middleware of this.data[key]) {
+                    if(middleware.constructor.getMeta('reset') === false){
+                        _temps.push(middleware);
+                    }
+                }
+                this.data[key] = _temps;
+            }
+
+            return this.data;
+        },
         use: function (middleware, owner){
             var _type = null;
 

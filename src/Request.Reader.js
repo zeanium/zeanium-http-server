@@ -6,6 +6,7 @@ var node_path = require('path');
 var formidable = require('formidable');
 var xml2js = require('xml2js');
 var Middleware = require('./Middleware');
+var __slice__ = Array.prototype.slice;
 
 module.exports = zn.Class({
     events: [ 'data', 'end', 'close' ],
@@ -61,25 +62,32 @@ module.exports = zn.Class({
         getUnmatchs: function (){
             return this._$unmatchs;
         },
-        getJSON: function (inName){
-            var _value = this.getValue(inName);
-            if(typeof _value == 'object'){
-                return _value;
+        getJSON: function (){
+            var args = __slice__.call(arguments), _data = {}, _item = {};
+            for(var item of args) {
+                if(zn.is(item, 'string')) {
+                    _item = this.getValue(item);
+                    if(typeof _item == 'string'){
+                        try {
+                            _item = JSON.parse(_item);
+                        } catch (err) {
+                            throw new zn.ERROR.HttpRequestError({
+                                code: 400,
+                                message: err.message,
+                                detail: err.stack
+                            });
+                        }
+                    }
+                }else if (zn.is(item, 'object')){
+                    _item = item;
+                }else{
+                    continue;
+                }
+                
+                _data = zn.extend(_data, _item);
             }
 
-            if(_value && typeof _value == 'string'){
-                try {
-                    return JSON.parse(_value);
-                } catch (err) {
-                    throw new zn.ERROR.HttpRequestError({
-                        code: 400,
-                        message: err.message,
-                        detail: err.stack
-                    });
-                }
-            }else {
-                return {};
-            }
+            return _data;
         },
         getValue: function (inName) {
             var _values = zn.extend({}, this._$data, this._$get, this._$post, this._$params);

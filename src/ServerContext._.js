@@ -54,7 +54,7 @@ module.exports = zn.Class({
             this.__initSessionContext();
             this.__deploy();
             this.__loadingCompleted();
-            Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "initial", [config, server, this]);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "loaded", [config, server, this]);
         },
         initLogger: function (logConfig){
             this._logger = new Logger(logConfig, {
@@ -113,6 +113,7 @@ module.exports = zn.Class({
             this._apps = {};
             this._routes = [];
             this._modules = this.__loadPackages(config.modules);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "initial", [config, this]);
         },
         __loadingCompleted: function (){
             var _timestamp = (new Date()).getTime() - this._server._beginTimestamp,

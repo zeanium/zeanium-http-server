@@ -53,8 +53,8 @@ module.exports = zn.Class({
         watching: function (){
             if(this._config.mode != 'development') return;
             this.__watchingFileChangedByPath(function (){
+                Middleware.reset();
                 var _config = this._config;
-                this._context = null;
                 this.__init(_config);
                 this.__createServerContext(_config);
             }.bind(this));
@@ -76,7 +76,7 @@ module.exports = zn.Class({
         },
         start: function (config){
             var _config = zn.overwrite(config||{}, this._config);
-            this.__loadServerMiddlewares(_config.middlewares);
+            Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER, "start", [_config, this]);
             this.__createServerContext(_config);
             this.__createHTTPServer(_config);
             Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER, "started", [_config, this]);
@@ -113,6 +113,7 @@ module.exports = zn.Class({
             return this;
         },
         __createServerContext: function (config){
+            this.__loadServerMiddlewares(config.middlewares);
             this._context = new ServerContext(config, this);
         },
         __createHTTPServer: function (config){
