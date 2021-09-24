@@ -358,8 +358,12 @@ module.exports = zn.Class({
             }
         },
         formatSpecialCharacter: function (str){
-            if(typeof str == 'string'){
+            /*if(typeof str == 'string'){
                 return str.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, '&apos;');
+            }*/
+
+            if(typeof str == 'string'){
+                return str.toString().replace(/&/g, "&amp;").replace(/'/g, '&apos;');
             }
             /*
             if(typeof str == 'string'){
@@ -375,7 +379,7 @@ module.exports = zn.Class({
             return str;
         },
         unFormatSpecialCharacter: function (str){
-            return str.toString().replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&apos;/g, "'");
+            return str.toString().replace(/&amp;/g, "&").replace(/&apos;/g, "'");
             //return str.toString().replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
         }
     }
