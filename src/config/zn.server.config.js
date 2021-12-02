@@ -40,7 +40,7 @@ module.exports = {
         maxFields: 1000,
         multiples: true
     },
-    timeout: 30000,
+    timeout: 300000,
     cors: true,
     indexs: ['index.html', 'index.htm', 'default.html', 'default.htm'],
     session: {
