@@ -65,7 +65,7 @@ module.exports = zn.Class({
             return node_path.join(this._webRoot, path);
         },
         resolveModel: function (modelName){
-            return this._models[modelName] || this._models[config.deploy + '.' + modelName];
+            return this._models[modelName] || this._models[this._config.deploy + '.' + modelName];
         },
         registerModelSql: function (key, modelSql){
             if(!this._Sql) {
