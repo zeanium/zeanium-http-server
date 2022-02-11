@@ -234,7 +234,7 @@ module.exports = zn.Class({
             return _exports;
         },
         __resolve: function (path){
-            var _paths = process.env.NODE_PATH.split(':');
+            var _paths = (process.env.NODE_PATH||'').split(':');
             for(var i = 0, _len = _paths.length; i < _len; i++){
                 if(node_fs.existsSync(node_path.join(_paths[i], path))){
                     return node_path.join(_paths[i], path);
