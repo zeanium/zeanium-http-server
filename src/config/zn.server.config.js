@@ -56,7 +56,7 @@ module.exports = {
             //domain: '/',
             path: '/',
             expires: 60 * 60 * 60 * 24,
-            httpOnly: true,
+            //httpOnly: true,
             secure: false
         }
     }

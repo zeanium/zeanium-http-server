@@ -240,7 +240,8 @@ module.exports = zn.Class({
             _cookie.split(';').forEach(function (item, index){
                 if(item.trim()){
                     _ary = item.trim().split('=');
-                    this._cookies.push(new Cookie(_ary[0].trim(), _ary[1].trim()));
+                    _ary[1] = (_ary[1] == null && _ary[0] != null) ? true : _ary[1];
+                    this._cookies.push(new Cookie(_ary[0].trim(), _ary[1] || true));
                 }
             }.bind(this));
         }
