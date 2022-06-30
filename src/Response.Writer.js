@@ -103,7 +103,9 @@ module.exports = zn.Class({
                 filepath = node_path.resolve(process.cwd(), filepath);
             }
             if(!node_fs.existsSync(filepath)){
-                throw new Error(filepath + ' is not exist.');
+                var _errMsg = filepath + ' is not exist.';
+                zn.error(_errMsg);
+                return this.error(_errMsg), false;
             }
             var _rs = node_fs.createReadStream(filepath);
             this.setCommonHeaders();
@@ -116,7 +118,9 @@ module.exports = zn.Class({
                 filepath = node_path.resolve(process.cwd(), filepath);
             }
             if(!node_fs.existsSync(filepath)){
-                throw new Error(filepath + ' is not exist.');
+                var _errMsg = filepath + ' is not exist.';
+                zn.error(_errMsg);
+                return this.error(_errMsg), false;
             }
             var _extname = node_path.extname(filepath).toLowerCase(),
                 _mime = MIMES[_extname] || {
