@@ -3,6 +3,10 @@
  */
 var VARS = require('./static/VARS');
 var ERRORS = require('./static/ERRORS');
+var MIMES = require('./static/MIMES');
+var node_fs = require('fs');
+var node_path = require('path');
+
 
 module.exports = zn.Class({
     methods: {
@@ -93,6 +97,47 @@ module.exports = zn.Class({
                 'Content-disposition': 'attachment; filename=' + encodeURI(filename) + '.xlsx'
             });
             xlsx.generate(this._serverResponse);
+        },
+        downloadFile: function (filename, filepath){
+            if(filepath.charAt(0) != '/'){
+                filepath = node_path.resolve(process.cwd(), filepath);
+            }
+            if(!node_fs.existsSync(filepath)){
+                throw new Error(filepath + ' is not exist.');
+            }
+            var _rs = node_fs.createReadStream(filepath);
+            this.setCommonHeaders();
+            this._serverResponse.setHeader('Content-Type', "application/force-download;charset=binary");
+            this._serverResponse.setHeader('Content-Disposition', "attachment; filename=" + filename);
+            _rs.pipe(this._serverResponse);
+        },
+        readFile: function (filepath){
+            if(filepath.charAt(0) != '/'){
+                filepath = node_path.resolve(process.cwd(), filepath);
+            }
+            if(!node_fs.existsSync(filepath)){
+                throw new Error(filepath + ' is not exist.');
+            }
+            var _extname = node_path.extname(filepath).toLowerCase(),
+                _mime = MIMES[_extname] || {
+                    contentType: 'text/plain',
+                    encoding: 'binary'
+                };
+            if(typeof _mime == 'string'){
+                _mime = {
+                    contentType: _mime,
+                    encoding: 'binary'
+                };
+            }
+            var _content = node_fs.readFileSync(filepath, {
+                encoding: _mime.encoding,
+                flag: 'r'
+            });
+            this.setCommonHeaders();
+            this._serverResponse.setHeader('Content-Type', _mime.contentType + ";charset=" + _mime.encoding);
+            this._serverResponse.setHeader('Content-Length', Buffer.byteLength(_content, _mime.encoding));
+            this._serverResponse.writeHead(200, "OK");
+            this._serverResponse.end(_content, _mime.encoding);
         }
     }
 });
