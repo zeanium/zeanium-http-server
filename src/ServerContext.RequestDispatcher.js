@@ -209,6 +209,7 @@ module.exports = zn.Class({
             var _data = err.gets?err.gets():{
                 code: 503,
                 message: err.message,
+                data: err.message,
                 detail: err.stack
             };
 

@@ -58,12 +58,16 @@ module.exports = zn.Class({
                 var _argv = [request, response, _application, this, _route];
                 if(_validate === true){
                     return request.sessionVerify((session)=>{
-                        _argv.push(session);
-                        if(Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "sessionVerified", _argv) === false){
-                            return false;
-                        };
-                        if(!this.__validateRouteMeta(_meta, request, response)) return;
-                        _controller[_action].apply(_controller, _argv);
+                        try {
+                            _argv.push(session);
+                            if(Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "sessionVerified", _argv) === false){
+                                return false;
+                            };
+                            if(!this.__validateRouteMeta(_meta, request, response)) return;
+                            _controller[_action].apply(_controller, _argv);
+                        } catch (err) {
+                            this.doHttpError(request.clientRequest, response.serverResponse, err);
+                        }
                     }, (err)=>{
                         this.doHttpError(request.clientRequest, response.serverResponse, err);
                     });
