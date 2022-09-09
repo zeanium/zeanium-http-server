@@ -65,6 +65,7 @@ module.exports = zn.SessionContext('ZNSession-Memory', {
             return _session;
         },
         getSessionByKey: function (sessionKey, success, error){
+            zn.debug('[keys]: ', Object.keys(this._sessions));
             var _session = this._sessions[sessionKey];
             if(_session){
                 _session.updateExpiresTime();

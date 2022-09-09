@@ -6,7 +6,7 @@ var node_fs = require('fs');
 var ServerContextDeployer = require('./ServerContext.Deployer.js');
 var ServerContextRequestDispatcher = require('./ServerContext.RequestDispatcher.js');
 var ServerContextRequestRouter = require('./ServerContext.RequestRouter.js');
-var MemorySessionContext = require('./session/MemorySessionContext');
+var JSONSessionContext = require('./session/JSONSessionContext');
 var PathMatcher = require('./PathMatcher');
 var Middleware = require('./Middleware');
 var Logger = require('./Logger');
@@ -97,7 +97,7 @@ module.exports = zn.Class({
             var _sessionContext = Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "registerSessionContext", [this]);
             if(!_sessionContext) {
                 var _config = this._config.session || {};
-                var _Context = _config.context || MemorySessionContext;
+                var _Context = _config.context || JSONSessionContext;
                 _sessionContext = new _Context(_config, this);
             }
             if(_sessionContext) {
