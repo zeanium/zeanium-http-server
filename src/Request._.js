@@ -120,7 +120,32 @@ module.exports = zn.Class({
                 }
             });
         },
-        xsrfTokenVerify: function (success, error){
+        xsrfTokenIdVerify: function (success, error){
+            var _token = this._clientRequest.headers["x-csrf-token"] || this.getCookie('CSRF-Token');
+            if(zn.isZNObject(_token)){
+                _token = _token.getValue();
+            }
+            if(!_token){
+                return error && error(new zn.ERROR.HttpRequestError({
+                    code: 401,
+                    message: "401.1 XSRFToken失效",
+                    detail: "登录XSRFToken已经过期失效。"
+                })), false;
+            }
+
+            var _value = this._serverContext._sessionContext.jwtVerifyToken(_token);
+            zn.debug('CSRF-Token: ', _value);
+            if(_value.exp > Date.now()){
+                return error && error(new zn.ERROR.HttpRequestError({
+                    code: 401,
+                    message: "401.1 XSRFToken失效",
+                    detail: "登录XSRFToken已经过期失效。"
+                })), false;
+            }else{
+                return success && success(_value.data), _value.data;
+            }
+        },
+        xsrfTokenKeyVerify: function (success, error){
             var _token = this._clientRequest.headers["x-csrf-token"] || this.getCookie('CSRF-Token');
             if(zn.isZNObject(_token)){
                 _token = _token.getValue();
@@ -146,8 +171,8 @@ module.exports = zn.Class({
             }
         },
         sessionVerify: function (success, error){
-            var _key = this.xsrfTokenVerify();
-            zn.debug('Request sessionVerify SessionKey: ', _key);
+            var _key = this.xsrfTokenKeyVerify();
+            zn.debug('Request sessionVerify session key: ', _key);
             if(_key){
                 this._serverContext._sessionContext.getSessionByKey(_key, function (session){
                     this._session = session;

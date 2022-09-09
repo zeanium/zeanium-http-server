@@ -79,18 +79,6 @@ var SessionContext = zn.Class({
             _session.initialize();
             return callback && callback(_session), _session;
         },
-        getIds: function (){
-            throw new Error("The Method Has's Implement.");
-        },
-        getSession: function (sessionId){
-            throw new Error("The Method Has's Implement.");
-        },
-        getSessionByKey: function (sessionKey){
-            throw new Error("The Method Has's Implement.");
-        },
-        removeSession: function (session){
-            throw new Error("The Method Has's Implement.");
-        },
         updateSessionId: function (sessionId, success, error){
             this.getSession(sessionId, function (session){
                 session.updateId();
@@ -108,6 +96,21 @@ var SessionContext = zn.Class({
             }, error);
 
             return this;
+        },
+        getIds: function (){
+            throw new Error("The Method Has's Implement.");
+        },
+        getSession: function (sessionId){
+            throw new Error("The Method Has's Implement.");
+        },
+        getSessionById: function (sessionKey){
+            throw new Error("The Method Has's Implement.");
+        },
+        getSessionByKey: function (sessionKey){
+            throw new Error("The Method Has's Implement.");
+        },
+        removeSession: function (session){
+            throw new Error("The Method Has's Implement.");
         },
         validateSession: function (sessionId){
             throw new Error("The Method Has's Implement.");

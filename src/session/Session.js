@@ -161,7 +161,7 @@ module.exports = zn.Class({
         },
         generateId: function (key){
             var _token = this._context.sign(key || this._key);
-            zn.trace('[ Session Token ]: ', {
+            zn.trace('[ session ]: ', {
                 id: _token,
                 key: this._key
             });

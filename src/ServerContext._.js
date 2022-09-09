@@ -96,11 +96,9 @@ module.exports = zn.Class({
             }
             var _sessionContext = Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "registerSessionContext", [this]);
             if(!_sessionContext) {
-                var _config = this._config.session;
-                if(_config){
-                    var _Context = _config.context || MemorySessionContext;
-                    _sessionContext = new _Context(_config, this);
-                }
+                var _config = this._config.session || {};
+                var _Context = _config.context || MemorySessionContext;
+                _sessionContext = new _Context(_config, this);
             }
             if(_sessionContext) {
                 this._sessionContext = _sessionContext;
