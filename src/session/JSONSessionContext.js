@@ -62,7 +62,7 @@ module.exports = zn.SessionContext('ZNSession-JSON', {
             
             return success && success(_keys), _keys;
         },
-        getSession: function (sessionKey){
+        getSession: function (sessionKey, success, error){
             return this.getSessionByKey(sessionKey, success, error);
         },
         getSessionByKey: function (sessionKey, success, error){
