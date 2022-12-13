@@ -313,17 +313,24 @@ module.exports = zn.Class({
             if(serverResponse.finished) return this;
             var _headers = clientRequest.headers,
                 _origin = _headers.origin || _headers.host || _headers.Host,
-                _basic = zn.overwrite({
-                    'Access-Control-Allow-Origin': _origin,
-                    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
-                    'Access-Control-Allow-Headers': 'Accept,Accept-Charset,Accept-Encoding,Accept-Language,Connection,Content-Type,Cookie,DNT,Host,Keep-Alive,Origin,Referer,User-Agent,X-CSRF-Token,X-Requested-With',
-                    "Access-Control-Allow-Credentials": true,
-                    'Access-Control-Max-Age': '3600',
+                _basic = {
                     'X-Powered-By': PACKAGE.name,
                     'Server': PACKAGE.name,
                     'Server-Version': PACKAGE.version,
                     'Content-Type': (_headers["Content-Type"] || "application/json") + ';charset=' + (_headers["encoding"]||"utf-8")
-                }, this._config.cors);
+                };
+            if(zn.is(this._config.cors, 'object')) {
+                _basic = zn.overwrite(_basic, this._config.cors);
+            }else if(this._config.cors === true) {
+                _basic = zn.overwrite(_basic, {
+                    //'Access-Control-Allow-Origin': _origin,
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
+                    'Access-Control-Allow-Headers': 'Accept,Accept-Charset,Accept-Encoding,Accept-Language,Connection,Content-Type,Cookie,DNT,Host,Keep-Alive,Origin,Referer,User-Agent,X-CSRF-Token,X-Requested-With',
+                    "Access-Control-Allow-Credentials": true,
+                    'Access-Control-Max-Age': '3600',
+                });
+            }
 
             for(var key in _basic){
                 serverResponse.setHeader(key, _basic[key]);
