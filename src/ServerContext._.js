@@ -319,26 +319,35 @@ module.exports = zn.Class({
                     'Server-Version': PACKAGE.version,
                     'Content-Type': (_headers["Content-Type"] || "application/json") + ';charset=' + (_headers["encoding"]||"utf-8")
                 };
-            if(zn.is(this._config.cors, 'object')) {
-                _basic = zn.overwrite(_basic, this._config.cors);
-            }else if(this._config.cors === true) {
-                _basic = zn.overwrite(_basic, {
-                    'Access-Control-Allow-Origin': _origin,
-                    //'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
-                    'Access-Control-Allow-Headers': 'Accept,Accept-Charset,Accept-Encoding,Accept-Language,Connection,Content-Type,Cookie,DNT,Host,Keep-Alive,Origin,Referer,User-Agent,X-CSRF-Token,X-Requested-With',
-                    "Access-Control-Allow-Credentials": true,
-                    'Access-Control-Max-Age': '3600',
-                });
-                if(this._config.cors_origin && typeof this._config.cors_origin == 'string') {
-                    if(this._config.cors_origin == '*') {
-                        _basic['Access-Control-Allow-Origin'] = '*';
-                    }else if (this._config.cors_origin.length > 10 ){
-                        _basic['Access-Control-Allow-Origin'] = this._config.cors_origin;
+            var _cors = this._config.cors, _cors_type = zn.type(_cors);
+            if(_cors_type == 'function') {
+                _cors = _cors.call(null, clientRequest, serverResponse, this);
+            }
+            _cors_type = zn.type(_cors);
+            switch(_cors_type) {
+                case 'object':
+                    _basic = zn.overwrite(_basic, _cors);
+                    break;
+                case 'boolean':
+                    _basic = zn.overwrite(_basic, {
+                        'Access-Control-Allow-Origin': _origin,
+                        //'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
+                        'Access-Control-Allow-Headers': 'Accept,Accept-Charset,Accept-Encoding,Accept-Language,Connection,Content-Type,Cookie,DNT,Host,Keep-Alive,Origin,Referer,User-Agent,X-CSRF-Token,X-Requested-With',
+                        "Access-Control-Allow-Credentials": true,
+                        'Access-Control-Max-Age': '3600',
+                    });
+                    if(this._config.cors_origin && typeof this._config.cors_origin == 'string') {
+                        if(this._config.cors_origin == '*') {
+                            _basic['Access-Control-Allow-Origin'] = '*';
+                        }else if (this._config.cors_origin.length > 10 ){
+                            _basic['Access-Control-Allow-Origin'] = this._config.cors_origin;
+                        }
                     }
-                }
+                    break;
             }
 
+            zn.info('【headers】：', _basic);
             for(var key in _basic){
                 serverResponse.setHeader(key, _basic[key]);
             }
