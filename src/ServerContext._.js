@@ -323,13 +323,20 @@ module.exports = zn.Class({
                 _basic = zn.overwrite(_basic, this._config.cors);
             }else if(this._config.cors === true) {
                 _basic = zn.overwrite(_basic, {
-                    //'Access-Control-Allow-Origin': _origin,
-                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Origin': _origin,
+                    //'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
                     'Access-Control-Allow-Headers': 'Accept,Accept-Charset,Accept-Encoding,Accept-Language,Connection,Content-Type,Cookie,DNT,Host,Keep-Alive,Origin,Referer,User-Agent,X-CSRF-Token,X-Requested-With',
                     "Access-Control-Allow-Credentials": true,
                     'Access-Control-Max-Age': '3600',
                 });
+                if(this._config.cors_origin && typeof this._config.cors_origin == 'string') {
+                    if(this._config.cors_origin == '*') {
+                        _basic['Access-Control-Allow-Origin'] = '*';
+                    }else if (this._config.cors_origin.length > 10 ){
+                        _basic['Access-Control-Allow-Origin'] = this._config.cors_origin;
+                    }
+                }
             }
 
             for(var key in _basic){
