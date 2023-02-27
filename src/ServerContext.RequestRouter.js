@@ -109,7 +109,7 @@ module.exports = zn.Class({
                         });
                     }
     
-                    return request.validateRequestParameters(meta.argv);
+                    return request.validateRequestParameters(meta.args || meta.argv);
                 }
     
                 return request.validateRequestParameters({});
