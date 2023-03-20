@@ -1,4 +1,4 @@
-
+var node_path = require('path');
 module.exports = zn.Class({
     events: ['routeMatch', 'routeMatched'],
     properties:{ 
@@ -8,7 +8,7 @@ module.exports = zn.Class({
     methods: {
         init: function (argv, events){
             this.__initEvents(events);
-            this._pathSeparator = argv.pathSeparator || '/';
+            this._pathSeparator = node_path.sep || argv.pathSeparator || '/';
             this._pathParameterSymbol = argv.pathParameterSymbol || ':';
         },
         __initEvents: function (events){
@@ -68,7 +68,14 @@ module.exports = zn.Class({
                 _unmatchs = [],
                 _hasChecked = false,
                 _temp = null,
+                _temps = [];
+            if(requestPath.indexOf(this._pathSeparator) != -1) {
                 _temps = requestPath.split(this._pathSeparator);
+            } else if (requestPath.indexOf('/') != -1) {
+                _temps = requestPath.split('/');
+            } else if (requestPath.indexOf('\\') != -1) {
+                _temps = requestPath.split('\\');
+            }
 
             if(route.exact) {
                 if(_temps.length !== _paths.length){
@@ -113,7 +120,14 @@ module.exports = zn.Class({
         parseRoutePath: function (path){
             var _paths = [],
                 _temp = null,
+                _temps = [];
+            if(path.indexOf(this._pathSeparator) != -1) {
                 _temps = path.split(this._pathSeparator);
+            } else if (path.indexOf('/') != -1) {
+                _temps = path.split('/');
+            } else if (path.indexOf('\\') != -1) {
+                _temps = path.split('\\');
+            }
             
             for(var i = 0, _len = _temps.length; i < _len; i++) {
                 _temp = _temps[i];

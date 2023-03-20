@@ -347,7 +347,7 @@ module.exports = zn.Class({
                     break;
             }
 
-            zn.info('【headers】：', _basic);
+            //zn.info('【headers】：', _basic);
             for(var key in _basic){
                 serverResponse.setHeader(key, _basic[key]);
             }
