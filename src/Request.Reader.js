@@ -63,25 +63,41 @@ module.exports = zn.Class({
             return this._$unmatchs;
         },
         getJSON: function (){
-            var args = __slice__.call(arguments), _data = {}, _item = {};
+            var args = __slice__.call(arguments), _data = {}, _item = null;
             for(var item of args) {
-                if(zn.is(item, 'string')) {
-                    _item = this.getValue(item);
-                    if(typeof _item == 'string'){
-                        try {
-                            _item = JSON.parse(_item);
-                        } catch (err) {
-                            throw new zn.ERROR.HttpRequestError({
-                                code: 400,
-                                message: err.message,
-                                detail: err.stack
-                            });
+                _item = {};
+                switch(zn.type(item)) {
+                    case 'string':
+                        _item = this.getValue(item);
+                        if(typeof _item == 'string'){
+                            try {
+                                _item = JSON.parse(_item);
+                            } catch (err) {
+                                throw new zn.ERROR.HttpRequestError({
+                                    code: 400,
+                                    message: err.message,
+                                    detail: err.stack
+                                });
+                            }
                         }
-                    }
-                }else if (zn.is(item, 'object')){
-                    _item = item;
-                }else{
-                    continue;
+                        break;
+                    case 'object':
+                        var _value = null;
+                        for(var key in item) {
+                            _value = item[key];
+                            if(zn.is(_value, 'function')) {
+                                _value = _value.call(null, key, _value, item, _data);
+                            }
+                            if(_value === false || _value === null || _value === undefined) {
+                                continue;
+                            }
+
+                            _data[key] = _value;
+                        }
+                        break;
+                    case 'function':
+                        _item = item.call(null, _data);
+                        break;
                 }
                 
                 _data = zn.extend(_data, _item);
