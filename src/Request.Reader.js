@@ -91,7 +91,7 @@ module.exports = zn.Class({
                             if(_value === false || _value === null || _value === undefined) {
                                 continue;
                             }
-                            if(zn.is(_value, 'object')) {
+                            if(zn.is(_value, 'object') && _value.__) {
                                 for(var _k in _value) {
                                     _data[_k] = _value[_k];
                                 }
