@@ -36,6 +36,8 @@ module.exports = zn.Class({
     },
     methods: {
         init: function (config, server){
+            config.root = config.root || './';
+            config.web_root = config.web_root || './';
             this.super(config, server);
             this._config = config;
             this._server = server;
@@ -43,8 +45,8 @@ module.exports = zn.Class({
             this._models = {};
             this.initLogger(config.log);
             this._url = this.__parseURL(config.host, config.port);
-            this._root = node_path.resolve(process.cwd(), (config.root || './'));
-            this._webRoot = node_path.resolve(process.cwd(), (config.web_root || './'));
+            this._root = node_path.resolve(process.cwd(), config.root);
+            this._webRoot = node_path.resolve(process.cwd(), config.web_root);
             this._pathMatcher = new PathMatcher({
                 pathSeparator: config.pathSeparator,
                 pathParameterSymbol: config.pathParameterSymbol

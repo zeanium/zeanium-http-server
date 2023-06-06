@@ -13,6 +13,8 @@ module.exports = {
     host: '0.0.0.0',
     port: 8888,
     cwd: '/',
+    root: './',
+    web_root: './',
     log: {
         dir: './log/'
     },
