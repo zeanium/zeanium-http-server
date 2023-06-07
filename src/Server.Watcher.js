@@ -28,7 +28,7 @@ module.exports = zn.Class({
             .on('raw', function(event, path, details) {
                 var _return = Middleware.callMiddlewareMethod(Middleware.TYPES.SERVER_CONTEXT, "fileChanged", [event, path, details]);
                 if(_return === false) return _return;
-                var _path = path || details.path || details.watchedPath;
+                var _path = details.watchedPath || path || details.path;
                 if(_path.substr(-3, 3)=='.js'){
                     if(this._changedFiles.indexOf(_path)==-1 && event!=='unknown'){
                         this._changedFiles.push(_path);
