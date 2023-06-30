@@ -285,11 +285,12 @@ module.exports = zn.Class({
                     detail: "File Object is null."
                 });
             }
-            
+
+            var _file_path = file.path || file.filepath;
             var _options = options || {},
                 _config = this._serverContext.__initFileUploadConfig(),
-                _tempName = file.path.substring(file.path.lastIndexOf(node_path.sep) + 1);
-                _ext = node_path.extname(file.name),
+                _tempName = _file_path.substring(_file_path.lastIndexOf(node_path.sep) + 1);
+                _ext = node_path.extname(file.name || file.originalFilename),
                 _name = _tempName,
                 _folder = _options.folder || '',
                 _savedDir = _config.savedDir;
@@ -323,8 +324,8 @@ module.exports = zn.Class({
             this._serverContext.__initPath(_savedDir);
             var _savedPath = node_path.join(_savedDir, _name + _ext),
                 _file = {
-                    name: file.name,
-                    type: file.type,
+                    name: file.name || file.newFilename,
+                    type: file.type || file.mimetype,
                     tempName: _tempName,
                     encoding: _config.encoding,
                     ext: _ext,
@@ -341,7 +342,7 @@ module.exports = zn.Class({
             }
 
             zn.debug('Upload File Saved: ', _savedPath);
-            return node_fs.renameSync(file.path, _savedPath), _file;
+            return node_fs.renameSync(_file_path, _savedPath), _file;
         },
         uploadFiles: function (options, eachCallback){
             var _files = [],
@@ -355,9 +356,10 @@ module.exports = zn.Class({
             return _files;
         },
         clearFiles: function (files){
-            zn.each(files || this._$files, function (file){
-                if(node_fs.existsSync(file.path)){
-                    node_fs.unlinkSync(file.path);
+            zn.each(files || this._$files, (file)=>{
+                var _file_path = file.path || file.filepath;
+                if(node_fs.existsSync(_file_path)){
+                    node_fs.unlinkSync(_file_path);
                 }
             });
 
