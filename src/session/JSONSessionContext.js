@@ -7,7 +7,7 @@ module.exports = zn.SessionContext('ZNSession-JSON', {
     },
     methods: {
         init: function (config, serverContext){
-            var _path = config.path || './session.data/';
+            var _path = config.path || './.data/session';
             this._path = this.resolvePath(_path);
             this.super(config, serverContext);
         },

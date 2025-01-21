@@ -16,7 +16,7 @@ module.exports = {
     root: './',
     web_root: './',
     log: {
-        dir: './log/'
+        dir: './.data/log'
     },
     restart: {
         timeout: 5000,
@@ -35,8 +35,8 @@ module.exports = {
     formidable: {
         encoding: 'utf-8',
         keepExtensions: false,
-        uploadDir: './',
-        savedDir: './',
+        uploadDir: './.data/upload',
+        savedDir: './.data/saved',
         maxFieldsSize: 20 * 1024 * 1024,
         maxFileSize: 500 * 1024 * 1024,
         maxFields: 1000,
