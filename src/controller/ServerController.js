@@ -71,25 +71,28 @@ module.exports = zn.Controller('_$_', {
         apis: {
             method: 'GET/POST',
             value: function (request, response, application, context, router){
-                var _routes = context._routes,
+                var _routes = context._routes.reverse(),
                     _data = [];
                 for(var route of _routes){
                     _data.push({
-                        action: route.action,
-                        method: route.handler.meta.method,
                         validate: route.validate,
-                        path: route.path,
                         deploy: route.meta.deploy,
-                        controller: route.meta.controller
+                        path: route.path,
+                        method: route.handler.meta.method,
+                        controller: route.meta.controller,
+                        action: route.action,
+                        argv: route.handler.meta.argv,
+                        comment: route.handler.meta.comment,
                     });
                 }
+
                 response.success(_data);
             }
         },
         routes: {
             method: 'GET/POST',
             value: function (request, response, application, context, router){
-                var _routes = context._routes,
+                var _routes = context._routes.reverse(),
                     _data = [];
                 for(var route of _routes){
                     _data.push(route.path);

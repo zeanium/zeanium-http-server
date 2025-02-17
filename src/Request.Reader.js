@@ -157,6 +157,13 @@ module.exports = zn.Class({
                     case 'object':
                         var _value = _defaultValue.value,
                             _reg = _defaultValue.regexp;
+                        if(_defaultValue.type && zn.is(_newValue, _defaultValue.type.toLowerCase()) == false){
+                            throw new zn.ERROR.HttpRequestError({
+                                code: 400,
+                                message: "Parameter DataType Is Invalid.",
+                                detail: "Value data type of http request parameter('" + _key + "') is not '" + _defaultValue.type + "'."
+                            });
+                        }
 
                         if(_reg && !_reg.test(_value)){
                             throw new zn.ERROR.HttpRequestError({

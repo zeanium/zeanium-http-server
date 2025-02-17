@@ -108,8 +108,9 @@ module.exports = zn.Class({
                             detail: "The Resource Only Allow [ " + _method + " ] Method, But The Method Of Request Is " + _requestMethod + "."
                         });
                     }
-    
-                    return request.validateRequestParameters(meta.args || meta.argv);
+                    meta.args = zn.extend({}, meta.argv, meta.args);
+                    meta.argv = meta.args;
+                    return request.validateRequestParameters(meta.args);
                 }
     
                 return request.validateRequestParameters({});
